@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Sparkles, TrendingUp, TrendingDown, IndianRupee, Calendar, BarChart3, PieChart, ArrowUpRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import BottomNav from "@/components/BottomNav";
 
 type SIPHolding = {
   id: number;
@@ -177,6 +178,7 @@ const Portfolio = () => {
           </div>
         </div>
       </main>
+      <BottomNav />
     </div>
   );
 };

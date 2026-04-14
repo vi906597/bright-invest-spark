@@ -4,6 +4,7 @@ import { ArrowLeft, Sparkles, ArrowDownLeft, ArrowUpRight, Filter, Search, India
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import BottomNav from "@/components/BottomNav";
 
 type Transaction = {
   id: string;
@@ -139,6 +140,7 @@ const TransactionHistory = () => {
           })}
         </div>
       </main>
+      <BottomNav />
     </div>
   );
 };
