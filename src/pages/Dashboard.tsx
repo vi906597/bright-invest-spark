@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Sparkles, TrendingUp, Calculator, LogOut, IndianRupee, ArrowRight,
-  Calendar, ChevronRight, Star, Zap, Shield, BarChart3
+  Calendar, ChevronRight, Star, Zap, Shield, BarChart3, History, PieChart
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -74,9 +74,15 @@ const Dashboard = () => {
             </div>
             <span className="text-xl font-bold text-primary">eAisha Invest</span>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={() => navigate("/portfolio")} className="rounded-xl">
+              <PieChart className="w-4 h-4 mr-1" /> Portfolio
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => navigate("/transactions")} className="rounded-xl">
+              <History className="w-4 h-4 mr-1" /> History
+            </Button>
             <Button variant="outline" size="sm" onClick={() => navigate("/calculator")} className="rounded-xl">
-              <Calculator className="w-4 h-4 mr-2" /> SIP Calculator
+              <Calculator className="w-4 h-4 mr-1" /> Calculator
             </Button>
             <Button variant="ghost" size="sm" onClick={handleLogout} className="rounded-xl text-destructive">
               <LogOut className="w-4 h-4" />
