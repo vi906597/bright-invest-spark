@@ -84,7 +84,7 @@ const Portfolio = () => {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-6 max-w-3xl space-y-5 animate-fade-in">
+      <main className="container mx-auto px-4 py-6 pb-24 max-w-3xl space-y-5 animate-fade-in">
         {/* Overview Card */}
         <Card className="p-6 rounded-2xl shadow-elevated border-border gradient-primary text-primary-foreground">
           <p className="text-sm opacity-80">Total Portfolio Value</p>
