@@ -4,6 +4,7 @@ import { ArrowLeft, Sparkles, IndianRupee, TrendingUp, Calendar, PieChart } from
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
+import BottomNav from "@/components/BottomNav";
 
 const SIPCalculator = () => {
   const navigate = useNavigate();
@@ -40,7 +41,7 @@ const SIPCalculator = () => {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8 max-w-3xl">
+      <main className="container mx-auto px-4 py-8 pb-24 max-w-3xl">
         <div className="animate-fade-in space-y-6">
           {/* Sliders */}
           <Card className="p-6 rounded-2xl shadow-card border-border space-y-8">
@@ -154,6 +155,7 @@ const SIPCalculator = () => {
           </Button>
         </div>
       </main>
+      <BottomNav />
     </div>
   );
 };

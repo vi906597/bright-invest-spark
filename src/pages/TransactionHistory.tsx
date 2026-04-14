@@ -4,6 +4,7 @@ import { ArrowLeft, Sparkles, ArrowDownLeft, ArrowUpRight, Filter, Search, India
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import BottomNav from "@/components/BottomNav";
 
 type Transaction = {
   id: string;
@@ -63,7 +64,7 @@ const TransactionHistory = () => {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-6 max-w-3xl space-y-5 animate-fade-in">
+      <main className="container mx-auto px-4 py-6 pb-24 max-w-3xl space-y-5 animate-fade-in">
         {/* Summary */}
         <div className="grid grid-cols-2 gap-3">
           <Card className="p-4 rounded-2xl shadow-card">
@@ -139,6 +140,7 @@ const TransactionHistory = () => {
           })}
         </div>
       </main>
+      <BottomNav />
     </div>
   );
 };

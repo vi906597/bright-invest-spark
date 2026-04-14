@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Sparkles, TrendingUp, TrendingDown, IndianRupee, Calendar, BarChart3, PieChart, ArrowUpRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import BottomNav from "@/components/BottomNav";
 
 type SIPHolding = {
   id: number;
@@ -83,7 +84,7 @@ const Portfolio = () => {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-6 max-w-3xl space-y-5 animate-fade-in">
+      <main className="container mx-auto px-4 py-6 pb-24 max-w-3xl space-y-5 animate-fade-in">
         {/* Overview Card */}
         <Card className="p-6 rounded-2xl shadow-elevated border-border gradient-primary text-primary-foreground">
           <p className="text-sm opacity-80">Total Portfolio Value</p>
@@ -177,6 +178,7 @@ const Portfolio = () => {
           </div>
         </div>
       </main>
+      <BottomNav />
     </div>
   );
 };
