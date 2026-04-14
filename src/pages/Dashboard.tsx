@@ -8,10 +8,6 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import BottomNav from "@/components/BottomNav";
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { useToast } from "@/hooks/use-toast";
 
 const sipPlans = [
   { id: 1, name: "Starter SIP", amount: 500, returns: "12-15%", risk: "Low", icon: Shield, popular: false },
