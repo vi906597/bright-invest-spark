@@ -4,7 +4,7 @@ import { Home, TrendingUp, Wallet, MoreHorizontal } from "lucide-react";
 
 const navItems = [
   { path: "/dashboard", label: "Home", icon: Home },
-  { path: "/calculator", label: "Invest", icon: TrendingUp, highlight: true },
+  { path: "/calculator", label: "Invest", icon: TrendingUp },
   { path: "/portfolio", label: "Portfolio", icon: Wallet },
   { path: "/transactions", label: "More", icon: MoreHorizontal },
 ];
@@ -19,16 +19,12 @@ const BottomNav = () => {
         {navItems.map((item) => {
           const isActive = location.pathname === item.path;
 
-          if (item.highlight) {
+          if (isActive) {
             return (
               <button
                 key={item.path}
                 onClick={() => navigate(item.path)}
-                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm transition-all ${
-                  isActive
-                    ? "gradient-primary text-primary-foreground shadow-sm"
-                    : "gradient-primary text-primary-foreground shadow-sm opacity-90 hover:opacity-100"
-                }`}
+                className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm gradient-primary text-primary-foreground shadow-sm transition-all"
               >
                 <item.icon className="w-5 h-5" />
                 {item.label}
@@ -40,11 +36,7 @@ const BottomNav = () => {
             <button
               key={item.path}
               onClick={() => navigate(item.path)}
-              className={`p-2.5 rounded-xl transition-all ${
-                isActive
-                  ? "text-primary"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
+              className="p-2.5 rounded-xl transition-all text-muted-foreground hover:text-foreground"
             >
               <item.icon className="w-6 h-6" />
             </button>
