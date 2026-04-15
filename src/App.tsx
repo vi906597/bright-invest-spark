@@ -8,6 +8,7 @@ import Dashboard from "./pages/Dashboard";
 import SIPCalculator from "./pages/SIPCalculator";
 import TransactionHistory from "./pages/TransactionHistory";
 import Portfolio from "./pages/Portfolio";
+import MorePage from "./pages/MorePage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -24,7 +25,8 @@ const App = () => (
           <Route path="/calculator" element={<SIPCalculator />} />
           <Route path="/transactions" element={<TransactionHistory />} />
           <Route path="/portfolio" element={<Portfolio />} />
-          <Route path="*" element={<NotFound />} />
+          <Route path="/more" element={<MorePage />} />
+          <Route path="/transactions" element={<TransactionHistory />} />
         </Routes>
       </BrowserRouter>
     </TooltipProvider>

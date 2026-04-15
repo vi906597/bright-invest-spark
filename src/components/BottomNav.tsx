@@ -6,7 +6,7 @@ const navItems = [
   { path: "/dashboard", label: "Home", icon: Home },
   { path: "/calculator", label: "Invest", icon: TrendingUp },
   { path: "/portfolio", label: "Portfolio", icon: Wallet },
-  { path: "/transactions", label: "More", icon: MoreHorizontal },
+  { path: "/more", label: "More", icon: MoreHorizontal },
 ];
 
 const BottomNav = () => {
