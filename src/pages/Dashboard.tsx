@@ -36,7 +36,7 @@ const Dashboard = () => {
 
   const handlePayment = (planName: string, amount: number) => {
     const options = {
-      key: "rzp_test_1DP5mmOlF5G5ag",
+      key: import.meta.env.VITE_RAZORPAY_KEY_ID || "rzp_test_1DP5mmOlF5G5ag",
       amount: amount * 100,
       currency: "INR",
       name: "eAisha Invest",
