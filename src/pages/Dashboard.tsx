@@ -2,11 +2,12 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Sparkles, TrendingUp, LogOut, IndianRupee, ArrowRight,
-  Calendar, ChevronRight, Star, Zap, Shield, BarChart3
+  Calendar, ChevronRight, Star, Zap, Shield, BarChart3, Loader2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import BottomNav from "@/components/BottomNav";
 
 const sipPlans = [
