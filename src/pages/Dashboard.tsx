@@ -196,12 +196,13 @@ const Dashboard = () => {
                 {selectedPlan === plan.id && (
                   <Button
                     className="w-full mt-4 rounded-xl gradient-primary text-primary-foreground font-semibold hover:opacity-90"
+                    disabled={isProcessing}
                     onClick={(e) => {
                       e.stopPropagation();
                       handlePayment(plan.name, plan.amount);
                     }}
                   >
-                    Invest Now <ArrowRight className="ml-2 w-4 h-4" />
+                    {isProcessing ? <><Loader2 className="ml-2 w-4 h-4 animate-spin" /> Processing...</> : <>Invest Now <ArrowRight className="ml-2 w-4 h-4" /></>}
                   </Button>
                 )}
               </Card>
@@ -228,6 +229,7 @@ const Dashboard = () => {
             </div>
             <Button
               className="h-12 px-6 rounded-xl gradient-primary text-primary-foreground font-semibold hover:opacity-90"
+              disabled={isProcessing}
               onClick={() => {
                 const amt = parseInt(customAmount);
                 if (!amt || amt < 100) {
@@ -237,7 +239,7 @@ const Dashboard = () => {
                 handlePayment("Custom SIP", amt);
               }}
             >
-              Pay <ChevronRight className="ml-1 w-4 h-4" />
+              {isProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : <>Pay <ChevronRight className="ml-1 w-4 h-4" /></>}
             </Button>
           </div>
         </Card>
