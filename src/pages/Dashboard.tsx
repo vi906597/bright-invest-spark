@@ -29,39 +29,81 @@ const Dashboard = () => {
   const user = JSON.parse(localStorage.getItem("eaisha_user") || '{"name":"Investor","email":""}');
   const [selectedPlan, setSelectedPlan] = useState<number | null>(null);
   const [customAmount, setCustomAmount] = useState("");
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const handleLogout = () => {
     localStorage.removeItem("eaisha_user");
     navigate("/");
   };
 
-  const handlePayment = (planName: string, amount: number) => {
-    const options = {
-      key: import.meta.env.VITE_RAZORPAY_KEY_ID || "rzp_test_1DP5mmOlF5G5ag",
-      amount: amount * 100,
-      currency: "INR",
-      name: "eAisha Invest",
-      description: `Monthly SIP - ${planName}`,
-      image: "",
-      handler: function (response: any) {
-        toast({
-          title: "🎉 Payment Successful!",
-          description: `SIP of ₹${amount}/month activated. Payment ID: ${response.razorpay_payment_id}`,
-        });
-        setSelectedPlan(null);
-      },
-      prefill: { name: user.name, email: user.email },
-      theme: { color: "#7c3aed" },
-      modal: {
-        ondismiss: () => toast({ title: "Payment cancelled", variant: "destructive" }),
-      },
-    };
+  const handlePayment = async (planName: string, amount: number) => {
+    setIsProcessing(true);
+    try {
+      // Step 1: Create order via edge function
+      const { data, error } = await supabase.functions.invoke('create-razorpay-order', {
+        body: {
+          amount,
+          currency: 'INR',
+          receipt: `sip_${planName.replace(/\s/g, '_')}_${Date.now()}`,
+          notes: { plan: planName, user: user.name },
+        },
+      });
 
-    if (window.Razorpay) {
-      const rzp = new window.Razorpay(options);
-      rzp.open();
-    } else {
-      toast({ title: "Demo Mode", description: `SIP of ₹${amount}/month for ${planName} would be processed via Razorpay.` });
+      if (error || !data?.order_id) {
+        toast({ title: "Order Creation Failed", description: error?.message || "Could not create payment order", variant: "destructive" });
+        setIsProcessing(false);
+        return;
+      }
+
+      // Step 2: Open Razorpay checkout
+      const options = {
+        key: data.key_id,
+        amount: data.amount,
+        currency: data.currency,
+        name: "eAisha Invest",
+        description: `Monthly SIP - ${planName}`,
+        order_id: data.order_id,
+        handler: async function (response: any) {
+          // Step 3: Verify payment via edge function
+          const { data: verifyData, error: verifyError } = await supabase.functions.invoke('verify-razorpay-payment', {
+            body: {
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+            },
+          });
+
+          if (verifyError || !verifyData?.verified) {
+            toast({ title: "Payment Verification Failed", description: "Please contact support", variant: "destructive" });
+          } else {
+            toast({
+              title: "🎉 Payment Successful!",
+              description: `SIP of ₹${amount}/month activated. Payment ID: ${response.razorpay_payment_id}`,
+            });
+          }
+          setSelectedPlan(null);
+          setIsProcessing(false);
+        },
+        prefill: { name: user.name, email: user.email },
+        theme: { color: "#7c3aed" },
+        modal: {
+          ondismiss: () => {
+            toast({ title: "Payment cancelled", variant: "destructive" });
+            setIsProcessing(false);
+          },
+        },
+      };
+
+      if (window.Razorpay) {
+        const rzp = new window.Razorpay(options);
+        rzp.open();
+      } else {
+        toast({ title: "Razorpay not loaded", description: "Please refresh the page and try again", variant: "destructive" });
+        setIsProcessing(false);
+      }
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message || "Something went wrong", variant: "destructive" });
+      setIsProcessing(false);
     }
   };
 
