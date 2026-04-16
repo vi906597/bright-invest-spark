@@ -57,7 +57,7 @@ const Dashboard = () => {
           amount,
           currency: 'INR',
           receipt: `sip_${planName.replace(/\s/g, '_')}_${Date.now()}`,
-          notes: { plan: planName, user: user.name },
+          notes: { plan: planName, user: userName },
         },
       });
 
@@ -96,7 +96,7 @@ const Dashboard = () => {
           setSelectedPlan(null);
           setIsProcessing(false);
         },
-        prefill: { name: user.name, email: user.email },
+        prefill: { name: userName },
         theme: { color: "#7c3aed" },
         modal: {
           ondismiss: () => {
@@ -140,7 +140,7 @@ const Dashboard = () => {
         {/* Welcome */}
         <div className="mb-8 animate-fade-in">
           <h1 className="text-3xl font-bold text-foreground">
-            Namaste, <span className="text-primary">{user.name}</span> 👋
+            Namaste, <span className="text-primary">{userName}</span> 👋
           </h1>
           <p className="text-muted-foreground mt-1">Start your wealth creation journey with monthly SIP</p>
         </div>
