@@ -9,6 +9,7 @@ import SIPCalculator from "./pages/SIPCalculator";
 import TransactionHistory from "./pages/TransactionHistory";
 import Portfolio from "./pages/Portfolio";
 import MorePage from "./pages/MorePage";
+import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -26,7 +27,7 @@ const App = () => (
           <Route path="/transactions" element={<TransactionHistory />} />
           <Route path="/portfolio" element={<Portfolio />} />
           <Route path="/more" element={<MorePage />} />
-          <Route path="/transactions" element={<TransactionHistory />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
         </Routes>
       </BrowserRouter>
     </TooltipProvider>
