@@ -145,8 +145,8 @@ const SIPCalculator = () => {
                 </label>
                 <span className="text-lg font-bold text-primary">₹{monthlyInvestment.toLocaleString()}</span>
               </div>
-              <Slider value={[monthlyInvestment]} onValueChange={(v) => setMonthlyInvestment(v[0])} min={500} max={100000} step={500} className="[&_[role=slider]]:gradient-primary [&_[role=slider]]:border-0" />
-              <div className="flex justify-between text-xs text-muted-foreground mt-1"><span>₹500</span><span>₹1,00,000</span></div>
+              <Slider value={[monthlyInvestment]} onValueChange={(v) => setMonthlyInvestment(v[0])} min={100} max={100000} step={100} className="[&_[role=slider]]:gradient-primary [&_[role=slider]]:border-0" />
+              <div className="flex justify-between text-xs text-muted-foreground mt-1"><span>₹100</span><span>₹1,00,000</span></div>
             </div>
 
             <div>

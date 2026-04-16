@@ -2,7 +2,9 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Sparkles, TrendingUp, LogOut, IndianRupee, ArrowRight,
-  Calendar, ChevronRight, Star, Zap, Shield, BarChart3, Loader2
+  Calendar, ChevronRight, Star, Zap, Shield, BarChart3, Loader2,
+  Leaf,
+  Rocket
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -11,10 +13,12 @@ import { supabase } from "@/integrations/supabase/client";
 import BottomNav from "@/components/BottomNav";
 
 const sipPlans = [
-  { id: 1, name: "Starter SIP", amount: 500, returns: "12-15%", risk: "Low", icon: Shield, popular: false },
-  { id: 2, name: "Growth SIP", amount: 1000, returns: "15-18%", risk: "Medium", icon: TrendingUp, popular: true },
-  { id: 3, name: "Power SIP", amount: 2500, returns: "18-22%", risk: "Medium-High", icon: Zap, popular: false },
-  { id: 4, name: "Premium SIP", amount: 5000, returns: "20-25%", risk: "High", icon: Star, popular: false },
+  { id: 1, name: "Stability SIP", amount: 100, returns: "8-12%", risk: "Low", icon: Shield, popular: false },
+  { id: 2, name: "Starter SIP", amount: 500, returns: "12-15%", risk: "Low", icon: Leaf, popular: false },
+  { id: 3, name: "Growth SIP", amount: 1000, returns: "15-18%", risk: "Medium", icon: TrendingUp, popular: true },
+  { id: 4, name: "Power SIP", amount: 2500, returns: "18-22%", risk: "Medium-High", icon: Zap, popular: false },
+  { id: 5, name: "Premium SIP", amount: 5000, returns: "20-25%", risk: "High", icon: Star, popular: false },
+  { id: 6, name: "Growth Booster SIP", amount: 10000, returns: "23-28%", risk: "High", icon: Rocket, popular: false },
 ];
 
 declare global {
