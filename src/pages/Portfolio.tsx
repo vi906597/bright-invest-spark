@@ -3,8 +3,16 @@ import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Sparkles, TrendingUp, TrendingDown, Calendar, BarChart3, PieChart, ArrowUpRight, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import BottomNav from "@/components/BottomNav";
 import { supabase } from "@/integrations/supabase/client";
+
+type Txn = {
+  amount: number;
+  current_value: number | null;
+  created_at: string;
+  razorpay_payment_id?: string | null;
+};
 
 type Holding = {
   key: string;
@@ -16,6 +24,7 @@ type Holding = {
   returnPercent: number;
   monthlyData: number[];
   isOther?: boolean;
+  txns: Txn[];
 };
 
 const STANDARD_PLANS: { amount: number; name: string }[] = [
@@ -31,6 +40,7 @@ const Portfolio = () => {
   const navigate = useNavigate();
   const [holdings, setHoldings] = useState<Holding[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selected, setSelected] = useState<Holding | null>(null);
 
   useEffect(() => {
     const load = async () => {
@@ -87,6 +97,7 @@ const Portfolio = () => {
           returnPercent: Number(ret.toFixed(1)),
           monthlyData,
           isOther: g.isOther,
+          txns: g.txns as Txn[],
         };
       });
 
@@ -208,7 +219,11 @@ const Portfolio = () => {
                   const gain = h.currentValue - h.totalInvested;
                   const pos = gain >= 0;
                   return (
-                    <Card key={h.key} className="p-4 rounded-2xl shadow-card border-border hover:shadow-elevated transition-shadow">
+                    <Card
+                      key={h.key}
+                      onClick={() => setSelected(h)}
+                      className="p-4 rounded-2xl shadow-card border-border hover:shadow-elevated transition-shadow cursor-pointer active:scale-[0.99]"
+                    >
                       <div className="flex items-start justify-between mb-3">
                         <div>
                           <h4 className="font-bold text-foreground">{h.name}</h4>
@@ -254,6 +269,68 @@ const Portfolio = () => {
         )}
       </main>
       <BottomNav />
+
+      <Dialog open={!!selected} onOpenChange={(o) => !o && setSelected(null)}>
+        <DialogContent className="max-w-md rounded-2xl max-h-[85vh] overflow-y-auto">
+          {selected && (
+            <>
+              <DialogHeader>
+                <DialogTitle>{selected.name}</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-3">
+                <div className="grid grid-cols-3 gap-2 p-3 rounded-xl bg-secondary">
+                  <div className="text-center">
+                    <p className="text-[10px] text-muted-foreground">Invested</p>
+                    <p className="text-sm font-bold text-foreground">₹{selected.totalInvested.toLocaleString()}</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-[10px] text-muted-foreground">Current</p>
+                    <p className="text-sm font-bold text-foreground">₹{selected.currentValue.toLocaleString()}</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-[10px] text-muted-foreground">Returns</p>
+                    <p className={`text-sm font-bold ${selected.currentValue - selected.totalInvested >= 0 ? "text-green-500" : "text-destructive"}`}>
+                      {selected.returnPercent}%
+                    </p>
+                  </div>
+                </div>
+
+                <p className="text-sm font-semibold text-foreground">
+                  All Transactions ({selected.txns.length})
+                </p>
+                <div className="space-y-2">
+                  {selected.txns.slice().reverse().map((t, i) => {
+                    const cv = Number(t.current_value || t.amount);
+                    const gain = cv - Number(t.amount);
+                    const pos = gain >= 0;
+                    return (
+                      <div key={i} className="p-3 rounded-xl border border-border flex items-center justify-between">
+                        <div>
+                          <p className="text-sm font-semibold text-foreground">₹{Number(t.amount).toLocaleString()}</p>
+                          <p className="text-[11px] text-muted-foreground">
+                            {new Date(t.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}
+                          </p>
+                          {t.razorpay_payment_id && (
+                            <p className="text-[10px] text-muted-foreground font-mono mt-0.5 truncate max-w-[180px]">
+                              {t.razorpay_payment_id}
+                            </p>
+                          )}
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm font-bold text-foreground">₹{cv.toLocaleString()}</p>
+                          <p className={`text-[11px] font-semibold ${pos ? "text-green-500" : "text-destructive"}`}>
+                            {pos ? "+" : ""}₹{gain.toLocaleString()}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
