@@ -97,7 +97,21 @@ const Dashboard = () => {
             },
           });
 
-          if (verifyError || !verifyData?.verified) {
+          const verified = !verifyError && verifyData?.verified;
+
+          // Step 4: Save transaction to DB
+          await supabase.from('transactions').insert({
+            user_id: authUser.id,
+            plan_name: planName,
+            amount,
+            type: 'sip',
+            status: verified ? 'success' : 'failed',
+            razorpay_order_id: response.razorpay_order_id,
+            razorpay_payment_id: response.razorpay_payment_id,
+            razorpay_signature: response.razorpay_signature,
+          });
+
+          if (!verified) {
             toast({ title: "Payment Verification Failed", description: "Please contact support", variant: "destructive" });
           } else {
             toast({
@@ -111,7 +125,16 @@ const Dashboard = () => {
         prefill: { name: userName },
         theme: { color: "#7c3aed" },
         modal: {
-          ondismiss: () => {
+          ondismiss: async () => {
+            await supabase.from('transactions').insert({
+              user_id: authUser.id,
+              plan_name: planName,
+              amount,
+              type: 'sip',
+              status: 'pending',
+              razorpay_order_id: data.order_id,
+              notes: 'Payment cancelled by user',
+            });
             toast({ title: "Payment cancelled", variant: "destructive" });
             setIsProcessing(false);
           },
