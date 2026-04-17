@@ -34,6 +34,21 @@ const Dashboard = () => {
   const [customAmount, setCustomAmount] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const [userName, setUserName] = useState("Investor");
+  const [stats, setStats] = useState({ invested: 0, currentValue: 0, activeSips: 0 });
+
+  const loadStats = async (uid: string) => {
+    const { data } = await supabase
+      .from('transactions')
+      .select('amount, current_value, status, type, plan_name')
+      .eq('user_id', uid)
+      .eq('status', 'success');
+    if (data) {
+      const invested = data.filter(t => t.type === 'sip').reduce((s, t) => s + Number(t.amount), 0);
+      const currentValue = data.reduce((s, t) => s + Number(t.current_value || 0), 0);
+      const activeSips = new Set(data.filter(t => t.type === 'sip').map(t => t.plan_name)).size;
+      setStats({ invested, currentValue: currentValue || invested, activeSips });
+    }
+  };
 
   React.useEffect(() => {
     const getUser = async () => {
@@ -43,6 +58,7 @@ const Dashboard = () => {
         return;
       }
       setUserName(authUser.user_metadata?.full_name || authUser.email?.split("@")[0] || "Investor");
+      loadStats(authUser.id);
     };
     getUser();
   }, [navigate]);
