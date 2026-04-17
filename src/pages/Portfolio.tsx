@@ -40,6 +40,7 @@ const Portfolio = () => {
   const navigate = useNavigate();
   const [holdings, setHoldings] = useState<Holding[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selected, setSelected] = useState<Holding | null>(null);
 
   useEffect(() => {
     const load = async () => {
