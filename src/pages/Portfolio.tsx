@@ -219,7 +219,11 @@ const Portfolio = () => {
                   const gain = h.currentValue - h.totalInvested;
                   const pos = gain >= 0;
                   return (
-                    <Card key={h.key} className="p-4 rounded-2xl shadow-card border-border hover:shadow-elevated transition-shadow">
+                    <Card
+                      key={h.key}
+                      onClick={() => setSelected(h)}
+                      className="p-4 rounded-2xl shadow-card border-border hover:shadow-elevated transition-shadow cursor-pointer active:scale-[0.99]"
+                    >
                       <div className="flex items-start justify-between mb-3">
                         <div>
                           <h4 className="font-bold text-foreground">{h.name}</h4>
