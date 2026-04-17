@@ -134,6 +134,8 @@ const Dashboard = () => {
               title: "🎉 Payment Successful!",
               description: `SIP of ₹${amount}/month activated. Payment ID: ${response.razorpay_payment_id}`,
             });
+            loadStats(authUser.id);
+          }
           }
           setSelectedPlan(null);
           setIsProcessing(false);
