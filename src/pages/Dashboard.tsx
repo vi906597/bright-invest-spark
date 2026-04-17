@@ -199,9 +199,9 @@ const Dashboard = () => {
         {/* Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
           {[
-            { label: "Total Invested", value: "₹0", icon: IndianRupee, color: "text-primary" },
-            { label: "Current Value", value: "₹0", icon: TrendingUp, color: "text-green-500" },
-            { label: "Active SIPs", value: "0", icon: Calendar, color: "text-accent" },
+            { label: "Total Invested", value: `₹${stats.invested.toLocaleString()}`, icon: IndianRupee, color: "text-primary" },
+            { label: "Current Value", value: `₹${stats.currentValue.toLocaleString()}`, icon: TrendingUp, color: "text-green-500" },
+            { label: "Active SIPs", value: String(stats.activeSips), icon: Calendar, color: "text-accent" },
           ].map((stat) => (
             <Card key={stat.label} className="p-5 rounded-2xl shadow-card border-border hover:shadow-elevated transition-shadow">
               <div className="flex items-center justify-between">
