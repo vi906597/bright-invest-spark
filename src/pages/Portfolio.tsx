@@ -3,8 +3,16 @@ import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Sparkles, TrendingUp, TrendingDown, Calendar, BarChart3, PieChart, ArrowUpRight, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import BottomNav from "@/components/BottomNav";
 import { supabase } from "@/integrations/supabase/client";
+
+type Txn = {
+  amount: number;
+  current_value: number | null;
+  created_at: string;
+  razorpay_payment_id?: string | null;
+};
 
 type Holding = {
   key: string;
@@ -16,6 +24,7 @@ type Holding = {
   returnPercent: number;
   monthlyData: number[];
   isOther?: boolean;
+  txns: Txn[];
 };
 
 const STANDARD_PLANS: { amount: number; name: string }[] = [
