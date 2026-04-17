@@ -97,6 +97,7 @@ const Portfolio = () => {
           returnPercent: Number(ret.toFixed(1)),
           monthlyData,
           isOther: g.isOther,
+          txns: g.txns as Txn[],
         };
       });
 
