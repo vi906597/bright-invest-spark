@@ -136,7 +136,6 @@ const Dashboard = () => {
             });
             loadStats(authUser.id);
           }
-          }
           setSelectedPlan(null);
           setIsProcessing(false);
         },
