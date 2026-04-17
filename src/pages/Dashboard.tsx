@@ -55,6 +55,14 @@ const Dashboard = () => {
   const handlePayment = async (planName: string, amount: number) => {
     setIsProcessing(true);
     try {
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      if (!authUser) {
+        toast({ title: "Login required", variant: "destructive" });
+        setIsProcessing(false);
+        navigate("/");
+        return;
+      }
+
       // Step 1: Create order via edge function
       const { data, error } = await supabase.functions.invoke('create-razorpay-order', {
         body: {
