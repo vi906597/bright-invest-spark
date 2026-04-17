@@ -1,33 +1,23 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Sparkles, ArrowDownLeft, ArrowUpRight, Filter, Search, IndianRupee, Calendar, CheckCircle2, XCircle, Clock } from "lucide-react";
+import { ArrowLeft, Sparkles, ArrowDownLeft, ArrowUpRight, Search, Calendar, CheckCircle2, XCircle, Clock, TrendingUp, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import BottomNav from "@/components/BottomNav";
+import { supabase } from "@/integrations/supabase/client";
 
 type Transaction = {
   id: string;
-  date: string;
-  planName: string;
+  created_at: string;
+  plan_name: string;
   amount: number;
   status: "success" | "failed" | "pending";
   type: "sip" | "withdrawal";
-  paymentId: string;
+  razorpay_payment_id: string | null;
+  returns_amount: number | null;
+  current_value: number | null;
 };
-
-const mockTransactions: Transaction[] = [
-  { id: "1", date: "2026-04-14", planName: "Growth SIP", amount: 1000, status: "success", type: "sip", paymentId: "pay_demo_abc123" },
-  { id: "2", date: "2026-04-10", planName: "Custom SIP", amount: 2000, status: "success", type: "sip", paymentId: "pay_demo_def456" },
-  { id: "3", date: "2026-03-14", planName: "Growth SIP", amount: 1000, status: "success", type: "sip", paymentId: "pay_demo_ghi789" },
-  { id: "4", date: "2026-03-10", planName: "Power SIP", amount: 2500, status: "failed", type: "sip", paymentId: "pay_demo_jkl012" },
-  { id: "5", date: "2026-02-14", planName: "Growth SIP", amount: 1000, status: "success", type: "sip", paymentId: "pay_demo_mno345" },
-  { id: "6", date: "2026-02-01", planName: "Starter SIP", amount: 500, status: "success", type: "sip", paymentId: "pay_demo_pqr678" },
-  { id: "7", date: "2026-01-14", planName: "Growth SIP", amount: 1000, status: "success", type: "sip", paymentId: "pay_demo_stu901" },
-  { id: "8", date: "2026-01-05", planName: "Premium SIP", amount: 5000, status: "pending", type: "sip", paymentId: "pay_demo_vwx234" },
-  { id: "9", date: "2025-12-20", planName: "Partial Withdrawal", amount: 3000, status: "success", type: "withdrawal", paymentId: "pay_demo_yza567" },
-  { id: "10", date: "2025-12-14", planName: "Growth SIP", amount: 1000, status: "success", type: "sip", paymentId: "pay_demo_bcd890" },
-];
 
 const statusConfig = {
   success: { icon: CheckCircle2, label: "Success", className: "text-green-500 bg-green-500/10" },
@@ -39,14 +29,40 @@ const TransactionHistory = () => {
   const navigate = useNavigate();
   const [filter, setFilter] = useState<"all" | "success" | "failed" | "pending">("all");
   const [search, setSearch] = useState("");
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const filtered = mockTransactions.filter((t) => {
+  useEffect(() => {
+    const load = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        navigate("/");
+        return;
+      }
+      const { data, error } = await supabase
+        .from("transactions")
+        .select("id, created_at, plan_name, amount, status, type, razorpay_payment_id, returns_amount, current_value")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false });
+      if (!error && data) setTransactions(data as Transaction[]);
+      setLoading(false);
+    };
+    load();
+  }, [navigate]);
+
+  const filtered = transactions.filter((t) => {
     if (filter !== "all" && t.status !== filter) return false;
-    if (search && !t.planName.toLowerCase().includes(search.toLowerCase()) && !t.paymentId.includes(search)) return false;
+    if (search) {
+      const q = search.toLowerCase();
+      if (!t.plan_name.toLowerCase().includes(q) && !(t.razorpay_payment_id || "").toLowerCase().includes(q)) return false;
+    }
     return true;
   });
 
-  const totalInvested = mockTransactions.filter(t => t.status === "success" && t.type === "sip").reduce((s, t) => s + t.amount, 0);
+  const successSips = transactions.filter(t => t.status === "success" && t.type === "sip");
+  const totalInvested = successSips.reduce((s, t) => s + Number(t.amount), 0);
+  const totalReturns = successSips.reduce((s, t) => s + Number(t.returns_amount || 0), 0);
+  const currentValue = successSips.reduce((s, t) => s + Number(t.current_value || t.amount), 0);
 
   return (
     <div className="min-h-screen bg-background">
@@ -66,23 +82,27 @@ const TransactionHistory = () => {
 
       <main className="container mx-auto px-4 py-6 pb-24 max-w-3xl space-y-5 animate-fade-in">
         {/* Summary */}
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-3 gap-3">
           <Card className="p-4 rounded-2xl shadow-card">
-            <p className="text-xs text-muted-foreground">Total Invested</p>
-            <p className="text-xl font-bold text-primary">₹{totalInvested.toLocaleString()}</p>
+            <p className="text-[10px] text-muted-foreground">Invested</p>
+            <p className="text-lg font-bold text-primary">₹{totalInvested.toLocaleString()}</p>
           </Card>
           <Card className="p-4 rounded-2xl shadow-card">
-            <p className="text-xs text-muted-foreground">Total Transactions</p>
-            <p className="text-xl font-bold text-foreground">{mockTransactions.length}</p>
+            <p className="text-[10px] text-muted-foreground">Current Value</p>
+            <p className="text-lg font-bold text-foreground">₹{currentValue.toLocaleString()}</p>
+          </Card>
+          <Card className="p-4 rounded-2xl shadow-card">
+            <p className="text-[10px] text-muted-foreground">Returns</p>
+            <p className={`text-lg font-bold flex items-center gap-1 ${totalReturns >= 0 ? "text-green-500" : "text-destructive"}`}>
+              <TrendingUp className="w-3 h-3" />₹{totalReturns.toLocaleString()}
+            </p>
           </Card>
         </div>
 
         {/* Search & Filter */}
-        <div className="flex gap-2">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input placeholder="Search plan or payment ID..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9 h-10 rounded-xl" />
-          </div>
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input placeholder="Search plan or payment ID..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9 h-10 rounded-xl" />
         </div>
         <div className="flex gap-2 flex-wrap">
           {(["all", "success", "failed", "pending"] as const).map(f => (
@@ -100,12 +120,19 @@ const TransactionHistory = () => {
 
         {/* Transaction List */}
         <div className="space-y-3">
-          {filtered.length === 0 ? (
+          {loading ? (
             <Card className="p-8 rounded-2xl shadow-card text-center">
-              <p className="text-muted-foreground">No transactions found</p>
+              <Loader2 className="w-6 h-6 animate-spin mx-auto text-primary" />
+            </Card>
+          ) : filtered.length === 0 ? (
+            <Card className="p-8 rounded-2xl shadow-card text-center">
+              <p className="text-muted-foreground">
+                {transactions.length === 0 ? "Abhi tak koi transaction nahi. Pehla SIP shuru karein!" : "No transactions found"}
+              </p>
             </Card>
           ) : filtered.map(tx => {
             const sc = statusConfig[tx.status];
+            const returns = Number(tx.returns_amount || 0);
             return (
               <Card key={tx.id} className="p-4 rounded-2xl shadow-card border-border hover:shadow-elevated transition-shadow">
                 <div className="flex items-center gap-3">
@@ -118,21 +145,28 @@ const TransactionHistory = () => {
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between">
-                      <p className="font-semibold text-foreground text-sm truncate">{tx.planName}</p>
+                      <p className="font-semibold text-foreground text-sm truncate">{tx.plan_name}</p>
                       <p className={`font-bold text-sm ${tx.type === "withdrawal" ? "text-amber-500" : "text-primary"}`}>
-                        {tx.type === "withdrawal" ? "-" : "+"}₹{tx.amount.toLocaleString()}
+                        {tx.type === "withdrawal" ? "-" : "+"}₹{Number(tx.amount).toLocaleString()}
                       </p>
                     </div>
                     <div className="flex items-center justify-between mt-1">
                       <div className="flex items-center gap-2">
                         <Calendar className="w-3 h-3 text-muted-foreground" />
-                        <span className="text-xs text-muted-foreground">{new Date(tx.date).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</span>
+                        <span className="text-xs text-muted-foreground">{new Date(tx.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</span>
                       </div>
                       <span className={`text-xs font-medium px-2 py-0.5 rounded-full flex items-center gap-1 ${sc.className}`}>
                         <sc.icon className="w-3 h-3" /> {sc.label}
                       </span>
                     </div>
-                    <p className="text-[10px] text-muted-foreground mt-1 font-mono">{tx.paymentId}</p>
+                    {returns !== 0 && (
+                      <p className={`text-xs mt-1 font-medium ${returns >= 0 ? "text-green-500" : "text-destructive"}`}>
+                        Returns: {returns >= 0 ? "+" : ""}₹{returns.toLocaleString()}
+                      </p>
+                    )}
+                    {tx.razorpay_payment_id && (
+                      <p className="text-[10px] text-muted-foreground mt-1 font-mono truncate">{tx.razorpay_payment_id}</p>
+                    )}
                   </div>
                 </div>
               </Card>
