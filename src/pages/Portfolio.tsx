@@ -269,6 +269,68 @@ const Portfolio = () => {
         )}
       </main>
       <BottomNav />
+
+      <Dialog open={!!selected} onOpenChange={(o) => !o && setSelected(null)}>
+        <DialogContent className="max-w-md rounded-2xl max-h-[85vh] overflow-y-auto">
+          {selected && (
+            <>
+              <DialogHeader>
+                <DialogTitle>{selected.name}</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-3">
+                <div className="grid grid-cols-3 gap-2 p-3 rounded-xl bg-secondary">
+                  <div className="text-center">
+                    <p className="text-[10px] text-muted-foreground">Invested</p>
+                    <p className="text-sm font-bold text-foreground">₹{selected.totalInvested.toLocaleString()}</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-[10px] text-muted-foreground">Current</p>
+                    <p className="text-sm font-bold text-foreground">₹{selected.currentValue.toLocaleString()}</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-[10px] text-muted-foreground">Returns</p>
+                    <p className={`text-sm font-bold ${selected.currentValue - selected.totalInvested >= 0 ? "text-green-500" : "text-destructive"}`}>
+                      {selected.returnPercent}%
+                    </p>
+                  </div>
+                </div>
+
+                <p className="text-sm font-semibold text-foreground">
+                  All Transactions ({selected.txns.length})
+                </p>
+                <div className="space-y-2">
+                  {selected.txns.slice().reverse().map((t, i) => {
+                    const cv = Number(t.current_value || t.amount);
+                    const gain = cv - Number(t.amount);
+                    const pos = gain >= 0;
+                    return (
+                      <div key={i} className="p-3 rounded-xl border border-border flex items-center justify-between">
+                        <div>
+                          <p className="text-sm font-semibold text-foreground">₹{Number(t.amount).toLocaleString()}</p>
+                          <p className="text-[11px] text-muted-foreground">
+                            {new Date(t.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}
+                          </p>
+                          {t.razorpay_payment_id && (
+                            <p className="text-[10px] text-muted-foreground font-mono mt-0.5 truncate max-w-[180px]">
+                              {t.razorpay_payment_id}
+                            </p>
+                          )}
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm font-bold text-foreground">₹{cv.toLocaleString()}</p>
+                          <p className={`text-[11px] font-semibold ${pos ? "text-green-500" : "text-destructive"}`}>
+                            {pos ? "+" : ""}₹{gain.toLocaleString()}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
