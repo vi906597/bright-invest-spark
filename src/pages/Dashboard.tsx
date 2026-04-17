@@ -34,6 +34,21 @@ const Dashboard = () => {
   const [customAmount, setCustomAmount] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const [userName, setUserName] = useState("Investor");
+  const [stats, setStats] = useState({ invested: 0, currentValue: 0, activeSips: 0 });
+
+  const loadStats = async (uid: string) => {
+    const { data } = await supabase
+      .from('transactions')
+      .select('amount, current_value, status, type, plan_name')
+      .eq('user_id', uid)
+      .eq('status', 'success');
+    if (data) {
+      const invested = data.filter(t => t.type === 'sip').reduce((s, t) => s + Number(t.amount), 0);
+      const currentValue = data.reduce((s, t) => s + Number(t.current_value || 0), 0);
+      const activeSips = new Set(data.filter(t => t.type === 'sip').map(t => t.plan_name)).size;
+      setStats({ invested, currentValue: currentValue || invested, activeSips });
+    }
+  };
 
   React.useEffect(() => {
     const getUser = async () => {
@@ -43,6 +58,7 @@ const Dashboard = () => {
         return;
       }
       setUserName(authUser.user_metadata?.full_name || authUser.email?.split("@")[0] || "Investor");
+      loadStats(authUser.id);
     };
     getUser();
   }, [navigate]);
@@ -55,6 +71,14 @@ const Dashboard = () => {
   const handlePayment = async (planName: string, amount: number) => {
     setIsProcessing(true);
     try {
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      if (!authUser) {
+        toast({ title: "Login required", variant: "destructive" });
+        setIsProcessing(false);
+        navigate("/");
+        return;
+      }
+
       // Step 1: Create order via edge function
       const { data, error } = await supabase.functions.invoke('create-razorpay-order', {
         body: {
@@ -89,13 +113,28 @@ const Dashboard = () => {
             },
           });
 
-          if (verifyError || !verifyData?.verified) {
+          const verified = !verifyError && verifyData?.verified;
+
+          // Step 4: Save transaction to DB
+          await supabase.from('transactions').insert({
+            user_id: authUser.id,
+            plan_name: planName,
+            amount,
+            type: 'sip',
+            status: verified ? 'success' : 'failed',
+            razorpay_order_id: response.razorpay_order_id,
+            razorpay_payment_id: response.razorpay_payment_id,
+            razorpay_signature: response.razorpay_signature,
+          });
+
+          if (!verified) {
             toast({ title: "Payment Verification Failed", description: "Please contact support", variant: "destructive" });
           } else {
             toast({
               title: "🎉 Payment Successful!",
               description: `SIP of ₹${amount}/month activated. Payment ID: ${response.razorpay_payment_id}`,
             });
+            loadStats(authUser.id);
           }
           setSelectedPlan(null);
           setIsProcessing(false);
@@ -103,7 +142,16 @@ const Dashboard = () => {
         prefill: { name: userName },
         theme: { color: "#7c3aed" },
         modal: {
-          ondismiss: () => {
+          ondismiss: async () => {
+            await supabase.from('transactions').insert({
+              user_id: authUser.id,
+              plan_name: planName,
+              amount,
+              type: 'sip',
+              status: 'pending',
+              razorpay_order_id: data.order_id,
+              notes: 'Payment cancelled by user',
+            });
             toast({ title: "Payment cancelled", variant: "destructive" });
             setIsProcessing(false);
           },
@@ -152,9 +200,9 @@ const Dashboard = () => {
         {/* Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
           {[
-            { label: "Total Invested", value: "₹0", icon: IndianRupee, color: "text-primary" },
-            { label: "Current Value", value: "₹0", icon: TrendingUp, color: "text-green-500" },
-            { label: "Active SIPs", value: "0", icon: Calendar, color: "text-accent" },
+            { label: "Total Invested", value: `₹${stats.invested.toLocaleString()}`, icon: IndianRupee, color: "text-primary" },
+            { label: "Current Value", value: `₹${stats.currentValue.toLocaleString()}`, icon: TrendingUp, color: "text-green-500" },
+            { label: "Active SIPs", value: String(stats.activeSips), icon: Calendar, color: "text-accent" },
           ].map((stat) => (
             <Card key={stat.label} className="p-5 rounded-2xl shadow-card border-border hover:shadow-elevated transition-shadow">
               <div className="flex items-center justify-between">
