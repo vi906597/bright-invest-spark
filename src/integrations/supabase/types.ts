@@ -14,6 +14,111 @@ export type Database = {
   }
   public: {
     Tables: {
+      bank_accounts: {
+        Row: {
+          account_holder: string
+          account_number: string
+          account_type: string
+          bank_name: string
+          branch: string | null
+          created_at: string
+          id: string
+          ifsc_code: string
+          is_primary: boolean
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          account_holder: string
+          account_number: string
+          account_type?: string
+          bank_name: string
+          branch?: string | null
+          created_at?: string
+          id?: string
+          ifsc_code: string
+          is_primary?: boolean
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          account_holder?: string
+          account_number?: string
+          account_type?: string
+          bank_name?: string
+          branch?: string | null
+          created_at?: string
+          id?: string
+          ifsc_code?: string
+          is_primary?: boolean
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      kyc_submissions: {
+        Row: {
+          aadhaar_back_url: string | null
+          aadhaar_front_url: string | null
+          aadhaar_number: string
+          address: string | null
+          created_at: string
+          date_of_birth: string | null
+          full_name_kyc: string
+          id: string
+          pan_document_url: string | null
+          pan_number: string
+          rejection_reason: string | null
+          reviewed_at: string | null
+          selfie_url: string | null
+          status: string
+          submitted_at: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          aadhaar_back_url?: string | null
+          aadhaar_front_url?: string | null
+          aadhaar_number: string
+          address?: string | null
+          created_at?: string
+          date_of_birth?: string | null
+          full_name_kyc: string
+          id?: string
+          pan_document_url?: string | null
+          pan_number: string
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          selfie_url?: string | null
+          status?: string
+          submitted_at?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          aadhaar_back_url?: string | null
+          aadhaar_front_url?: string | null
+          aadhaar_number?: string
+          address?: string | null
+          created_at?: string
+          date_of_birth?: string | null
+          full_name_kyc?: string
+          id?: string
+          pan_document_url?: string | null
+          pan_number?: string
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          selfie_url?: string | null
+          status?: string
+          submitted_at?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
