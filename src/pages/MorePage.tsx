@@ -425,6 +425,9 @@ const MorePage = () => {
       {/* Bank */}
       {user && <BankAccountsDialog open={activeDialog === "bank"} onOpenChange={(o) => !o && setActiveDialog(null)} userId={user.id} />}
 
+      {/* eAisha Card */}
+      {user && <EaishaCardDialog open={activeDialog === "card"} onOpenChange={(o) => !o && setActiveDialog(null)} userId={user.id} userEmail={user.email} userName={displayName} userPhone={phoneNumber} />}
+
       {/* Security */}
       <Dialog open={activeDialog === "security"} onOpenChange={(o) => !o && setActiveDialog(null)}>
         <DialogContent className="rounded-2xl">
