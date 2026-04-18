@@ -59,6 +59,45 @@ export type Database = {
         }
         Relationships: []
       }
+      eaisha_cards: {
+        Row: {
+          card_holder_name: string
+          created_at: string
+          id: string
+          member_code: string
+          phone: string | null
+          secret_code: string
+          sip_account_number: string
+          sip_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          card_holder_name: string
+          created_at?: string
+          id?: string
+          member_code: string
+          phone?: string | null
+          secret_code: string
+          sip_account_number: string
+          sip_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          card_holder_name?: string
+          created_at?: string
+          id?: string
+          member_code?: string
+          phone?: string | null
+          secret_code?: string
+          sip_account_number?: string
+          sip_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       kyc_submissions: {
         Row: {
           aadhaar_back_url: string | null
