@@ -97,7 +97,10 @@ const AuthPage = () => {
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl gradient-primary mb-4 shadow-elevated">
             <Sparkles className="w-8 h-8 text-primary-foreground" />
           </div>
-          <h1 className="text-3xl font-bold text-primary">eAisha Invest</h1>
+          
+          <h1 className="text-4xl font-bold">
+            ZY<span className="text-blue-800">PEUS</span>
+          </h1>
           <p className="text-muted-foreground mt-1">
             {mode === "login" && "Welcome back! Sign in to continue"}
             {mode === "signup" && "Create your account to start investing"}
@@ -110,17 +113,15 @@ const AuthPage = () => {
             <div className="flex bg-secondary rounded-xl p-1 mb-6">
               <button
                 onClick={() => setMode("login")}
-                className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${
-                  mode === "login" ? "gradient-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
-                }`}
+                className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${mode === "login" ? "gradient-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+                  }`}
               >
                 Login
               </button>
               <button
                 onClick={() => setMode("signup")}
-                className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${
-                  mode === "signup" ? "gradient-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
-                }`}
+                className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${mode === "signup" ? "gradient-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+                  }`}
               >
                 Sign Up
               </button>

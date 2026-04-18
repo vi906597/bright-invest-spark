@@ -180,7 +180,9 @@ const Dashboard = () => {
             <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center">
               <Sparkles className="w-5 h-5 text-primary-foreground" />
             </div>
-            <span className="text-xl font-bold text-primary">eAisha Invest</span>
+            <h1 className="text-2xl font-bold">
+            ZY<span className="text-blue-800">PEUS</span>
+          </h1>
           </div>
           <Button variant="ghost" size="sm" onClick={handleLogout} className="rounded-xl text-destructive">
             <LogOut className="w-4 h-4" />

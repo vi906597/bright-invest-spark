@@ -65,9 +65,9 @@ const EaishaCardDialog = ({ open, onOpenChange, userId, userEmail, userName, use
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="rounded-2xl max-w-md p-0 overflow-hidden bg-background">
-        <DialogHeader className="px-5 pt-5">
+        <DialogHeader className="px-5 pt-1 pb-1">
           <DialogTitle className="flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-primary" /> eAisha Card
+            <Sparkles className="w-5 h-5 text-primary" /> ZYPEUS CARD
           </DialogTitle>
         </DialogHeader>
 
@@ -86,14 +86,14 @@ const EaishaCardDialog = ({ open, onOpenChange, userId, userEmail, userName, use
                   <div className="h-2 bg-gradient-to-r from-orange-500 to-amber-400" />
                   <div className="flex items-center justify-between px-4 pt-3">
                     <div className="flex items-center gap-2">
-                      <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-indigo-500 to-green-500 flex items-center justify-center text-white font-bold text-xs">
-                        eA
+                      <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center">
+                        <Sparkles className="w-4 h-4 text-white" />
                       </div>
                       <div className="text-lg font-bold leading-none">
-                        eAi<span className="text-blue-600">SHA</span>
+                        ZY<span className="text-blue-600">PEUS</span>
                       </div>
                     </div>
-                    <div className="text-[10px] text-gray-500 uppercase tracking-wider">Mutual Fund</div>
+                    <div className="text-[10px] text-gray-500 uppercase tracking-wider">Invest Your Money Using This Card</div>
                   </div>
                   <div className="h-0.5 bg-orange-500 mt-2" />
 
@@ -113,9 +113,12 @@ const EaishaCardDialog = ({ open, onOpenChange, userId, userEmail, userName, use
 
                 {/* BACK */}
                 <div className="absolute inset-0 [backface-visibility:hidden] [transform:rotateY(180deg)] bg-white rounded-2xl shadow-lg overflow-hidden text-gray-900">
-                  <div className="h-2 bg-gradient-to-r from-orange-500 to-amber-400" />
-                  <div className="flex flex-col items-center justify-center h-full px-6 py-4">
-                    <h2 className="text-xl font-bold text-blue-600">eAisha</h2>
+                  <div className="h-3 bg-gradient-to-r from-orange-500 to-amber-400" />
+                  <div className="absolute inset-0 flex flex-col items-center justify-center px-6 text-center">
+                    <h2 className="text-4xl font-extrabold tracking-wide">
+                     
+                      ZY<span className="text-blue-600">PEUS</span>
+                    </h2>
                     <p className="text-xs text-gray-500 mt-1">Scan QR for details</p>
                     <div className="w-28 h-28 border-2 border-dashed border-gray-400 rounded-xl mt-3 flex items-center justify-center bg-white">
                       <img
@@ -126,7 +129,7 @@ const EaishaCardDialog = ({ open, onOpenChange, userId, userEmail, userName, use
                     </div>
                     <p className="text-[10px] text-gray-500 mt-2">Secure • Fast • Trusted</p>
                   </div>
-                  <div className="absolute bottom-0 left-0 right-0 h-5 bg-gradient-to-r from-orange-500 via-white to-green-600" />
+                  <div className="absolute bottom-0 left-0 right-0 h-3 bg-gradient-to-r from-orange-500 via-white to-green-600" />
                 </div>
               </div>
             </div>
