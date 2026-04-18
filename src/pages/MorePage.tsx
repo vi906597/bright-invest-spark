@@ -20,11 +20,12 @@ import {
 import BottomNav from "@/components/BottomNav";
 import KycDialog from "@/components/KycDialog";
 import BankAccountsDialog from "@/components/BankAccountsDialog";
+import EaishaCardDialog from "@/components/EaishaCardDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
 type DialogKey =
-  | "personal" | "phone" | "kyc" | "bank" | "security"
+  | "personal" | "phone" | "kyc" | "bank" | "security" | "card"
   | "watchlist" | "statements"
   | "language" | "applock"
   | "help" | "contact" | "refer" | "about"
@@ -205,6 +206,7 @@ const MorePage = () => {
           action: () => open("phone"),
         },
         { icon: Shield, label: "KYC Verification", desc: "Complete your KYC", badge: "Pending", action: () => open("kyc") },
+        { icon: CreditCard, label: "eAisha Card", desc: "View your unique investor card", badge: "New", badgeColor: "text-primary bg-primary/10", action: () => open("card") },
         { icon: CreditCard, label: "Bank Accounts", desc: "Manage linked accounts", action: () => open("bank") },
         { icon: Lock, label: "Security", desc: "Password, 2FA settings", action: () => open("security") },
       ],
