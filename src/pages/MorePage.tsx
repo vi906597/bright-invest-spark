@@ -18,6 +18,8 @@ import {
   Accordion, AccordionContent, AccordionItem, AccordionTrigger
 } from "@/components/ui/accordion";
 import BottomNav from "@/components/BottomNav";
+import KycDialog from "@/components/KycDialog";
+import BankAccountsDialog from "@/components/BankAccountsDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -416,38 +418,10 @@ const MorePage = () => {
       </Dialog>
 
       {/* KYC */}
-      <Dialog open={activeDialog === "kyc"} onOpenChange={(o) => !o && setActiveDialog(null)}>
-        <DialogContent className="rounded-2xl">
-          <DialogHeader>
-            <DialogTitle>KYC Verification</DialogTitle>
-            <DialogDescription>Complete KYC to invest more than ₹50,000/year</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-3 text-sm">
-            <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30">
-              <p className="font-medium text-foreground">Status: Pending</p>
-              <p className="text-xs text-muted-foreground mt-1">Documents required: PAN, Aadhaar, Bank proof</p>
-            </div>
-            <p className="text-xs text-muted-foreground">KYC integration coming soon. Aap support team se contact karein for manual KYC.</p>
-          </div>
-          <DialogFooter>
-            <Button onClick={() => { setActiveDialog(null); open("contact"); }} className="rounded-xl">Contact Support</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {user && <KycDialog open={activeDialog === "kyc"} onOpenChange={(o) => !o && setActiveDialog(null)} userId={user.id} />}
 
       {/* Bank */}
-      <Dialog open={activeDialog === "bank"} onOpenChange={(o) => !o && setActiveDialog(null)}>
-        <DialogContent className="rounded-2xl">
-          <DialogHeader>
-            <DialogTitle>Bank Accounts</DialogTitle>
-            <DialogDescription>Linked bank accounts for SIP auto-debit</DialogDescription>
-          </DialogHeader>
-          <div className="text-sm text-muted-foreground">
-            <p>No bank accounts linked yet.</p>
-            <p className="mt-2 text-xs">Payments are processed via Razorpay. Link a bank account from your Razorpay-saved methods at checkout.</p>
-          </div>
-        </DialogContent>
-      </Dialog>
+      {user && <BankAccountsDialog open={activeDialog === "bank"} onOpenChange={(o) => !o && setActiveDialog(null)} userId={user.id} />}
 
       {/* Security */}
       <Dialog open={activeDialog === "security"} onOpenChange={(o) => !o && setActiveDialog(null)}>
