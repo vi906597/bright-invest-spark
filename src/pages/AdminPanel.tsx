@@ -122,6 +122,32 @@ const AdminPanel = () => {
     setCreditUser(null); setCreditAmount(""); setCreditNote(""); loadAll();
   };
 
+  const submitBulkCredit = async () => {
+    const pct = Number(bulkPercent);
+    if (!pct || pct <= 0) return toast({ title: "Enter valid percentage", variant: "destructive" });
+    setBulkBusy(true);
+    const { data: { user } } = await supabase.auth.getUser();
+    const rows = profiles
+      .map(p => ({ user_id: p.user_id, invested: userInvested(p.user_id) }))
+      .filter(r => r.invested > 0)
+      .map(r => ({
+        user_id: r.user_id,
+        amount: Math.round(r.invested * pct) / 100,
+        note: bulkNote || `Daily interest @ ${pct}%`,
+        created_by: user?.id || null,
+      }));
+    if (rows.length === 0) {
+      setBulkBusy(false);
+      return toast({ title: "No invested users found", variant: "destructive" });
+    }
+    const { error } = await supabase.from("daily_interest_credits").insert(rows);
+    setBulkBusy(false);
+    if (error) return toast({ title: "Error", description: error.message, variant: "destructive" });
+    const totalGiven = rows.reduce((s, r) => s + r.amount, 0);
+    toast({ title: `Credited ${rows.length} users`, description: `Total ₹${totalGiven.toLocaleString()} distributed @ ${pct}%` });
+    setBulkOpen(false); setBulkPercent(""); setBulkNote(""); loadAll();
+  };
+
   const logout = async () => { await supabase.auth.signOut(); navigate("/secure-admin-92/login"); };
 
   if (authChecking || roleLoading) {
