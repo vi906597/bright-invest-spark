@@ -232,14 +232,16 @@ const AdminPanel = () => {
           <TabsContent value="users">
             <Card className="p-4 overflow-x-auto">
               <Table>
-                <TableHeader><TableRow><TableHead>Name</TableHead><TableHead>Phone</TableHead><TableHead>User ID</TableHead><TableHead>Joined</TableHead></TableRow></TableHeader>
+                <TableHeader><TableRow><TableHead>Name</TableHead><TableHead>Phone</TableHead><TableHead>Invested</TableHead><TableHead>Interest</TableHead><TableHead>Joined</TableHead><TableHead>Action</TableHead></TableRow></TableHeader>
                 <TableBody>
                   {profiles.map(p => (
                     <TableRow key={p.user_id}>
                       <TableCell>{p.full_name || "—"}</TableCell>
                       <TableCell>{p.phone || "—"}</TableCell>
-                      <TableCell className="font-mono text-xs">{p.user_id.slice(0, 8)}...</TableCell>
+                      <TableCell className="font-medium text-primary">₹{userInvested(p.user_id).toLocaleString()}</TableCell>
+                      <TableCell className="font-medium text-green-500">₹{userInterest(p.user_id).toLocaleString()}</TableCell>
                       <TableCell className="text-xs">{new Date(p.created_at).toLocaleDateString()}</TableCell>
+                      <TableCell><Button size="sm" variant="outline" onClick={() => setCreditUser(p)}><Coins className="w-3 h-3 mr-1" />Credit</Button></TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
