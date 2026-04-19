@@ -39,6 +39,10 @@ const AdminPanel = () => {
   const [editTx, setEditTx] = useState<Tx | null>(null);
   const [returnsInput, setReturnsInput] = useState("");
   const [valueInput, setValueInput] = useState("");
+  const [creditUser, setCreditUser] = useState<Profile | null>(null);
+  const [creditAmount, setCreditAmount] = useState("");
+  const [creditNote, setCreditNote] = useState("");
+  const [credits, setCredits] = useState<Array<{ user_id: string; amount: number; credit_date: string }>>([]);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -48,16 +52,18 @@ const AdminPanel = () => {
   }, [navigate]);
 
   const loadAll = async () => {
-    const [k, t, p, b] = await Promise.all([
+    const [k, t, p, b, c] = await Promise.all([
       supabase.from("kyc_submissions").select("*").order("submitted_at", { ascending: false }),
       supabase.from("transactions").select("*").order("created_at", { ascending: false }).limit(200),
       supabase.from("profiles").select("user_id, full_name, phone, created_at").order("created_at", { ascending: false }),
       supabase.from("bank_accounts").select("*").order("created_at", { ascending: false }),
+      supabase.from("daily_interest_credits").select("user_id, amount, credit_date"),
     ]);
     if (k.data) setKycs(k.data as Kyc[]);
     if (t.data) setTxs(t.data as Tx[]);
     if (p.data) setProfiles(p.data as Profile[]);
     if (b.data) setBanks(b.data as Bank[]);
+    if (c.data) setCredits(c.data as any);
   };
 
   useEffect(() => { if (isAdmin) loadAll(); }, [isAdmin]);
