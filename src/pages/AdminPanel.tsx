@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Shield, Users, FileCheck, CreditCard, Loader2, LogOut, CheckCircle2, XCircle, ExternalLink, RefreshCw } from "lucide-react";
+import { Shield, Users, FileCheck, CreditCard, Loader2, LogOut, CheckCircle2, XCircle, ExternalLink, RefreshCw, IndianRupee, TrendingUp, Coins } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -39,6 +39,10 @@ const AdminPanel = () => {
   const [editTx, setEditTx] = useState<Tx | null>(null);
   const [returnsInput, setReturnsInput] = useState("");
   const [valueInput, setValueInput] = useState("");
+  const [creditUser, setCreditUser] = useState<Profile | null>(null);
+  const [creditAmount, setCreditAmount] = useState("");
+  const [creditNote, setCreditNote] = useState("");
+  const [credits, setCredits] = useState<Array<{ user_id: string; amount: number; credit_date: string }>>([]);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -48,16 +52,18 @@ const AdminPanel = () => {
   }, [navigate]);
 
   const loadAll = async () => {
-    const [k, t, p, b] = await Promise.all([
+    const [k, t, p, b, c] = await Promise.all([
       supabase.from("kyc_submissions").select("*").order("submitted_at", { ascending: false }),
       supabase.from("transactions").select("*").order("created_at", { ascending: false }).limit(200),
       supabase.from("profiles").select("user_id, full_name, phone, created_at").order("created_at", { ascending: false }),
       supabase.from("bank_accounts").select("*").order("created_at", { ascending: false }),
+      supabase.from("daily_interest_credits").select("user_id, amount, credit_date"),
     ]);
     if (k.data) setKycs(k.data as Kyc[]);
     if (t.data) setTxs(t.data as Tx[]);
     if (p.data) setProfiles(p.data as Profile[]);
     if (b.data) setBanks(b.data as Bank[]);
+    if (c.data) setCredits(c.data as any);
   };
 
   useEffect(() => { if (isAdmin) loadAll(); }, [isAdmin]);
@@ -98,6 +104,20 @@ const AdminPanel = () => {
     setEditTx(null); setReturnsInput(""); setValueInput(""); loadAll();
   };
 
+  const submitCredit = async () => {
+    if (!creditUser || !creditAmount) return;
+    const { data: { user } } = await supabase.auth.getUser();
+    const { error } = await supabase.from("daily_interest_credits").insert({
+      user_id: creditUser.user_id,
+      amount: Number(creditAmount),
+      note: creditNote || null,
+      created_by: user?.id || null,
+    });
+    if (error) return toast({ title: "Error", description: error.message, variant: "destructive" });
+    toast({ title: "Interest credited", description: `₹${creditAmount} added to ${creditUser.full_name || "user"}` });
+    setCreditUser(null); setCreditAmount(""); setCreditNote(""); loadAll();
+  };
+
   const logout = async () => { await supabase.auth.signOut(); navigate("/secure-admin-92/login"); };
 
   if (authChecking || roleLoading) {
@@ -117,6 +137,12 @@ const AdminPanel = () => {
   }
 
   const pendingCount = kycs.filter(k => k.status === "pending").length;
+  const totalInvested = txs.filter(t => t.status === "success" && t.type === "sip").reduce((s, t) => s + Number(t.amount), 0);
+  const totalInterestPaid = credits.reduce((s, c) => s + Number(c.amount), 0);
+  const today = new Date().toISOString().split("T")[0];
+  const todayInterestPaid = credits.filter(c => c.credit_date === today).reduce((s, c) => s + Number(c.amount), 0);
+  const userInvested = (uid: string) => txs.filter(t => t.user_id === uid && t.status === "success" && t.type === "sip").reduce((s, t) => s + Number(t.amount), 0);
+  const userInterest = (uid: string) => credits.filter(c => c.user_id === uid).reduce((s, c) => s + Number(c.amount), 0);
 
   return (
     <div className="min-h-screen bg-background">
@@ -140,10 +166,10 @@ const AdminPanel = () => {
 
       <main className="container mx-auto px-4 py-6 max-w-7xl space-y-5">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <Card className="p-4"><p className="text-xs text-muted-foreground">Users</p><p className="text-2xl font-bold">{profiles.length}</p></Card>
-          <Card className="p-4"><p className="text-xs text-muted-foreground">Pending KYC</p><p className="text-2xl font-bold text-amber-500">{pendingCount}</p></Card>
-          <Card className="p-4"><p className="text-xs text-muted-foreground">Transactions</p><p className="text-2xl font-bold">{txs.length}</p></Card>
-          <Card className="p-4"><p className="text-xs text-muted-foreground">Bank Accounts</p><p className="text-2xl font-bold">{banks.length}</p></Card>
+          <Card className="p-4"><p className="text-xs text-muted-foreground flex items-center gap-1"><IndianRupee className="w-3 h-3" />Total Invested</p><p className="text-2xl font-bold text-primary">₹{totalInvested.toLocaleString()}</p></Card>
+          <Card className="p-4"><p className="text-xs text-muted-foreground flex items-center gap-1"><Coins className="w-3 h-3" />Interest Paid (All)</p><p className="text-2xl font-bold text-green-500">₹{totalInterestPaid.toLocaleString()}</p></Card>
+          <Card className="p-4"><p className="text-xs text-muted-foreground flex items-center gap-1"><TrendingUp className="w-3 h-3" />Today's Interest</p><p className="text-2xl font-bold text-green-500">₹{todayInterestPaid.toLocaleString()}</p></Card>
+          <Card className="p-4"><p className="text-xs text-muted-foreground">Users / Pending KYC</p><p className="text-2xl font-bold">{profiles.length} <span className="text-amber-500 text-base">/ {pendingCount}</span></p></Card>
         </div>
 
         <Tabs defaultValue="kyc">
@@ -206,14 +232,16 @@ const AdminPanel = () => {
           <TabsContent value="users">
             <Card className="p-4 overflow-x-auto">
               <Table>
-                <TableHeader><TableRow><TableHead>Name</TableHead><TableHead>Phone</TableHead><TableHead>User ID</TableHead><TableHead>Joined</TableHead></TableRow></TableHeader>
+                <TableHeader><TableRow><TableHead>Name</TableHead><TableHead>Phone</TableHead><TableHead>Invested</TableHead><TableHead>Interest</TableHead><TableHead>Joined</TableHead><TableHead>Action</TableHead></TableRow></TableHeader>
                 <TableBody>
                   {profiles.map(p => (
                     <TableRow key={p.user_id}>
                       <TableCell>{p.full_name || "—"}</TableCell>
                       <TableCell>{p.phone || "—"}</TableCell>
-                      <TableCell className="font-mono text-xs">{p.user_id.slice(0, 8)}...</TableCell>
+                      <TableCell className="font-medium text-primary">₹{userInvested(p.user_id).toLocaleString()}</TableCell>
+                      <TableCell className="font-medium text-green-500">₹{userInterest(p.user_id).toLocaleString()}</TableCell>
                       <TableCell className="text-xs">{new Date(p.created_at).toLocaleDateString()}</TableCell>
+                      <TableCell><Button size="sm" variant="outline" onClick={() => setCreditUser(p)}><Coins className="w-3 h-3 mr-1" />Credit</Button></TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -291,6 +319,34 @@ const AdminPanel = () => {
             </div>
           )}
           <DialogFooter><Button onClick={() => updateTx()}>Save Returns</Button></DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Credit Daily Interest Dialog */}
+      <Dialog open={!!creditUser} onOpenChange={(o) => !o && setCreditUser(null)}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Credit Daily Interest</DialogTitle></DialogHeader>
+          {creditUser && (
+            <div className="space-y-3">
+              <div className="p-3 rounded-lg bg-secondary">
+                <p className="text-sm font-medium">{creditUser.full_name || "User"}</p>
+                <p className="text-xs text-muted-foreground">Invested: ₹{userInvested(creditUser.user_id).toLocaleString()} · Total Interest: ₹{userInterest(creditUser.user_id).toLocaleString()}</p>
+              </div>
+              <div>
+                <label className="text-xs text-muted-foreground">Interest Amount (₹) *</label>
+                <Input type="number" placeholder="e.g. 50" value={creditAmount} onChange={(e) => setCreditAmount(e.target.value)} />
+              </div>
+              <div>
+                <label className="text-xs text-muted-foreground">Note (optional)</label>
+                <Input placeholder="Daily interest" value={creditNote} onChange={(e) => setCreditNote(e.target.value)} />
+              </div>
+              <p className="text-xs text-muted-foreground">User will see this on their dashboard as today's interest.</p>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCreditUser(null)}>Cancel</Button>
+            <Button onClick={submitCredit} className="bg-green-600 hover:bg-green-700"><Coins className="w-4 h-4 mr-1" />Credit</Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

@@ -34,7 +34,7 @@ const Dashboard = () => {
   const [customAmount, setCustomAmount] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const [userName, setUserName] = useState("Investor");
-  const [stats, setStats] = useState({ invested: 0, currentValue: 0, activeSips: 0 });
+  const [stats, setStats] = useState({ invested: 0, currentValue: 0, activeSips: 0, todayInterest: 0, totalInterest: 0 });
 
   const loadStats = async (uid: string) => {
     const { data } = await supabase
@@ -42,11 +42,20 @@ const Dashboard = () => {
       .select('amount, current_value, status, type, plan_name')
       .eq('user_id', uid)
       .eq('status', 'success');
+    const today = new Date().toISOString().split('T')[0];
+    const { data: credits } = await supabase
+      .from('daily_interest_credits')
+      .select('amount, credit_date')
+      .eq('user_id', uid);
+    const todayInterest = (credits || []).filter(c => c.credit_date === today).reduce((s, c) => s + Number(c.amount), 0);
+    const totalInterest = (credits || []).reduce((s, c) => s + Number(c.amount), 0);
     if (data) {
       const invested = data.filter(t => t.type === 'sip').reduce((s, t) => s + Number(t.amount), 0);
       const currentValue = data.reduce((s, t) => s + Number(t.current_value || 0), 0);
       const activeSips = new Set(data.filter(t => t.type === 'sip').map(t => t.plan_name)).size;
-      setStats({ invested, currentValue: currentValue || invested, activeSips });
+      setStats({ invested, currentValue: (currentValue || invested) + totalInterest, activeSips, todayInterest, totalInterest });
+    } else {
+      setStats(s => ({ ...s, todayInterest, totalInterest }));
     }
   };
 
@@ -198,6 +207,27 @@ const Dashboard = () => {
           </h1>
           <p className="text-muted-foreground mt-1">Start your wealth creation journey with monthly SIP</p>
         </div>
+
+        {/* Today's Interest Banner */}
+        {stats.todayInterest > 0 && (
+          <Card className="p-4 mb-4 rounded-2xl border-2 border-green-500/30 bg-green-500/5 animate-fade-in">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-green-500/10 flex items-center justify-center">
+                  <TrendingUp className="w-5 h-5 text-green-500" />
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Aaj ka interest mila 🎉</p>
+                  <p className="text-xl font-bold text-green-500">+₹{stats.todayInterest.toLocaleString()}</p>
+                </div>
+              </div>
+              <div className="text-right">
+                <p className="text-xs text-muted-foreground">Total interest</p>
+                <p className="text-sm font-semibold text-green-500">₹{stats.totalInterest.toLocaleString()}</p>
+              </div>
+            </div>
+          </Card>
+        )}
 
         {/* Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
