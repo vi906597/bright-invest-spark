@@ -188,6 +188,7 @@ const AdminPanel = () => {
             </div>
           </div>
           <div className="flex gap-2">
+            <Button size="sm" onClick={() => setBulkOpen(true)} className="bg-green-600 hover:bg-green-700"><Coins className="w-4 h-4 mr-1" />Credit All by %</Button>
             <Button variant="ghost" size="icon" onClick={loadAll}><RefreshCw className="w-4 h-4" /></Button>
             <Button variant="outline" size="sm" onClick={logout}><LogOut className="w-4 h-4 mr-2" />Logout</Button>
           </div>
