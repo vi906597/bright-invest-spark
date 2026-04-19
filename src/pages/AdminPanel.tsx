@@ -380,6 +380,41 @@ const AdminPanel = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Bulk % Credit Dialog */}
+      <Dialog open={bulkOpen} onOpenChange={setBulkOpen}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Credit Daily Interest to All Users</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <div className="p-3 rounded-lg bg-secondary">
+              <p className="text-xs text-muted-foreground">Total invested across all users</p>
+              <p className="text-xl font-bold text-primary">₹{totalInvested.toLocaleString()}</p>
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground">Interest % (per invested amount) *</label>
+              <Input type="number" step="0.01" placeholder="e.g. 1.83 (means 1.83% of invested)" value={bulkPercent} onChange={(e) => setBulkPercent(e.target.value)} />
+              {bulkPercent && Number(bulkPercent) > 0 && (
+                <p className="text-xs text-green-500 mt-1">
+                  Example: A user with ₹19,640 invested will get ₹{Math.round(19640 * Number(bulkPercent)) / 100}.
+                  Total payout ≈ ₹{(Math.round(totalInvested * Number(bulkPercent)) / 100).toLocaleString()}
+                </p>
+              )}
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground">Note (optional)</label>
+              <Input placeholder="Daily interest" value={bulkNote} onChange={(e) => setBulkNote(e.target.value)} />
+            </div>
+            <p className="text-xs text-muted-foreground">Each user's "Today's interest" banner will reflect their share immediately.</p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setBulkOpen(false)} disabled={bulkBusy}>Cancel</Button>
+            <Button onClick={submitBulkCredit} disabled={bulkBusy} className="bg-green-600 hover:bg-green-700">
+              {bulkBusy ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Coins className="w-4 h-4 mr-1" />}
+              Credit All
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
