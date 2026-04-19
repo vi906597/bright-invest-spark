@@ -11,6 +11,8 @@ import Portfolio from "./pages/Portfolio";
 import MorePage from "./pages/MorePage";
 import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
+import AdminLogin from "./pages/AdminLogin";
+import AdminPanel from "./pages/AdminPanel";
 
 const queryClient = new QueryClient();
 
@@ -28,6 +30,9 @@ const App = () => (
           <Route path="/portfolio" element={<Portfolio />} />
           <Route path="/more" element={<MorePage />} />
           <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/secure-admin-92/login" element={<AdminLogin />} />
+          <Route path="/secure-admin-92" element={<AdminPanel />} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
     </TooltipProvider>
