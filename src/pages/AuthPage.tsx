@@ -59,7 +59,7 @@ const AuthPage = () => {
     } else {
       toast({
         title: "Account Created! 🎉",
-        description: "Aapke email par verification link bheja gaya hai. Please verify karein.",
+        description: "A verification link has been sent to your email. Please verify..",
       });
     }
   };
@@ -67,7 +67,7 @@ const AuthPage = () => {
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) {
-      toast({ title: "Error", description: "Email daalein", variant: "destructive" });
+      toast({ title: "Error", description: "Enter Your Email", variant: "destructive" });
       return;
     }
     setLoading(true);
@@ -80,7 +80,7 @@ const AuthPage = () => {
     } else {
       toast({
         title: "Email Sent! 📧",
-        description: "Password reset link aapke email par bheja gaya hai.",
+        description: "Password reset link has been sent to your email",
       });
       setMode("login");
     }
@@ -144,7 +144,7 @@ const AuthPage = () => {
                   <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Full Name</label>
                   <div className="relative mt-1.5">
                     <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input placeholder="Aapka naam" value={name} onChange={(e) => setName(e.target.value)} className="pl-10 h-12 rounded-xl" />
+                    <Input placeholder="Your name" value={name} onChange={(e) => setName(e.target.value)} className="pl-10 h-12 rounded-xl" />
                   </div>
                 </div>
                 <div>
