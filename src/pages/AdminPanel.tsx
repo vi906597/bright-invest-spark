@@ -137,6 +137,12 @@ const AdminPanel = () => {
   }
 
   const pendingCount = kycs.filter(k => k.status === "pending").length;
+  const totalInvested = txs.filter(t => t.status === "success" && t.type === "sip").reduce((s, t) => s + Number(t.amount), 0);
+  const totalInterestPaid = credits.reduce((s, c) => s + Number(c.amount), 0);
+  const today = new Date().toISOString().split("T")[0];
+  const todayInterestPaid = credits.filter(c => c.credit_date === today).reduce((s, c) => s + Number(c.amount), 0);
+  const userInvested = (uid: string) => txs.filter(t => t.user_id === uid && t.status === "success" && t.type === "sip").reduce((s, t) => s + Number(t.amount), 0);
+  const userInterest = (uid: string) => credits.filter(c => c.user_id === uid).reduce((s, c) => s + Number(c.amount), 0);
 
   return (
     <div className="min-h-screen bg-background">
