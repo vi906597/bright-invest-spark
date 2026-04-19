@@ -43,6 +43,10 @@ const AdminPanel = () => {
   const [creditAmount, setCreditAmount] = useState("");
   const [creditNote, setCreditNote] = useState("");
   const [credits, setCredits] = useState<Array<{ user_id: string; amount: number; credit_date: string }>>([]);
+  const [bulkOpen, setBulkOpen] = useState(false);
+  const [bulkPercent, setBulkPercent] = useState("");
+  const [bulkNote, setBulkNote] = useState("");
+  const [bulkBusy, setBulkBusy] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -118,6 +122,32 @@ const AdminPanel = () => {
     setCreditUser(null); setCreditAmount(""); setCreditNote(""); loadAll();
   };
 
+  const submitBulkCredit = async () => {
+    const pct = Number(bulkPercent);
+    if (!pct || pct <= 0) return toast({ title: "Enter valid percentage", variant: "destructive" });
+    setBulkBusy(true);
+    const { data: { user } } = await supabase.auth.getUser();
+    const rows = profiles
+      .map(p => ({ user_id: p.user_id, invested: userInvested(p.user_id) }))
+      .filter(r => r.invested > 0)
+      .map(r => ({
+        user_id: r.user_id,
+        amount: Math.round(r.invested * pct) / 100,
+        note: bulkNote || `Daily interest @ ${pct}%`,
+        created_by: user?.id || null,
+      }));
+    if (rows.length === 0) {
+      setBulkBusy(false);
+      return toast({ title: "No invested users found", variant: "destructive" });
+    }
+    const { error } = await supabase.from("daily_interest_credits").insert(rows);
+    setBulkBusy(false);
+    if (error) return toast({ title: "Error", description: error.message, variant: "destructive" });
+    const totalGiven = rows.reduce((s, r) => s + r.amount, 0);
+    toast({ title: `Credited ${rows.length} users`, description: `Total ₹${totalGiven.toLocaleString()} distributed @ ${pct}%` });
+    setBulkOpen(false); setBulkPercent(""); setBulkNote(""); loadAll();
+  };
+
   const logout = async () => { await supabase.auth.signOut(); navigate("/secure-admin-92/login"); };
 
   if (authChecking || roleLoading) {
@@ -158,6 +188,7 @@ const AdminPanel = () => {
             </div>
           </div>
           <div className="flex gap-2">
+            <Button size="sm" onClick={() => setBulkOpen(true)} className="bg-green-600 hover:bg-green-700"><Coins className="w-4 h-4 mr-1" />Credit All by %</Button>
             <Button variant="ghost" size="icon" onClick={loadAll}><RefreshCw className="w-4 h-4" /></Button>
             <Button variant="outline" size="sm" onClick={logout}><LogOut className="w-4 h-4 mr-2" />Logout</Button>
           </div>
@@ -346,6 +377,41 @@ const AdminPanel = () => {
           <DialogFooter>
             <Button variant="outline" onClick={() => setCreditUser(null)}>Cancel</Button>
             <Button onClick={submitCredit} className="bg-green-600 hover:bg-green-700"><Coins className="w-4 h-4 mr-1" />Credit</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Bulk % Credit Dialog */}
+      <Dialog open={bulkOpen} onOpenChange={setBulkOpen}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Credit Daily Interest to All Users</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <div className="p-3 rounded-lg bg-secondary">
+              <p className="text-xs text-muted-foreground">Total invested across all users</p>
+              <p className="text-xl font-bold text-primary">₹{totalInvested.toLocaleString()}</p>
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground">Interest % (per invested amount) *</label>
+              <Input type="number" step="0.01" placeholder="e.g. 1.83 (means 1.83% of invested)" value={bulkPercent} onChange={(e) => setBulkPercent(e.target.value)} />
+              {bulkPercent && Number(bulkPercent) > 0 && (
+                <p className="text-xs text-green-500 mt-1">
+                  Example: A user with ₹19,640 invested will get ₹{Math.round(19640 * Number(bulkPercent)) / 100}.
+                  Total payout ≈ ₹{(Math.round(totalInvested * Number(bulkPercent)) / 100).toLocaleString()}
+                </p>
+              )}
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground">Note (optional)</label>
+              <Input placeholder="Daily interest" value={bulkNote} onChange={(e) => setBulkNote(e.target.value)} />
+            </div>
+            <p className="text-xs text-muted-foreground">Each user's "Today's interest" banner will reflect their share immediately.</p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setBulkOpen(false)} disabled={bulkBusy}>Cancel</Button>
+            <Button onClick={submitBulkCredit} disabled={bulkBusy} className="bg-green-600 hover:bg-green-700">
+              {bulkBusy ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Coins className="w-4 h-4 mr-1" />}
+              Credit All
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
