@@ -166,10 +166,10 @@ const AdminPanel = () => {
 
       <main className="container mx-auto px-4 py-6 max-w-7xl space-y-5">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <Card className="p-4"><p className="text-xs text-muted-foreground">Users</p><p className="text-2xl font-bold">{profiles.length}</p></Card>
-          <Card className="p-4"><p className="text-xs text-muted-foreground">Pending KYC</p><p className="text-2xl font-bold text-amber-500">{pendingCount}</p></Card>
-          <Card className="p-4"><p className="text-xs text-muted-foreground">Transactions</p><p className="text-2xl font-bold">{txs.length}</p></Card>
-          <Card className="p-4"><p className="text-xs text-muted-foreground">Bank Accounts</p><p className="text-2xl font-bold">{banks.length}</p></Card>
+          <Card className="p-4"><p className="text-xs text-muted-foreground flex items-center gap-1"><IndianRupee className="w-3 h-3" />Total Invested</p><p className="text-2xl font-bold text-primary">₹{totalInvested.toLocaleString()}</p></Card>
+          <Card className="p-4"><p className="text-xs text-muted-foreground flex items-center gap-1"><Coins className="w-3 h-3" />Interest Paid (All)</p><p className="text-2xl font-bold text-green-500">₹{totalInterestPaid.toLocaleString()}</p></Card>
+          <Card className="p-4"><p className="text-xs text-muted-foreground flex items-center gap-1"><TrendingUp className="w-3 h-3" />Today's Interest</p><p className="text-2xl font-bold text-green-500">₹{todayInterestPaid.toLocaleString()}</p></Card>
+          <Card className="p-4"><p className="text-xs text-muted-foreground">Users / Pending KYC</p><p className="text-2xl font-bold">{profiles.length} <span className="text-amber-500 text-base">/ {pendingCount}</span></p></Card>
         </div>
 
         <Tabs defaultValue="kyc">
