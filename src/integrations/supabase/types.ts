@@ -59,6 +59,39 @@ export type Database = {
         }
         Relationships: []
       }
+      daily_interest_credits: {
+        Row: {
+          amount: number
+          created_at: string
+          created_by: string | null
+          credit_date: string
+          id: string
+          note: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          created_by?: string | null
+          credit_date?: string
+          id?: string
+          note?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          created_by?: string | null
+          credit_date?: string
+          id?: string
+          note?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       eaisha_cards: {
         Row: {
           card_holder_name: string
