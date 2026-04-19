@@ -43,6 +43,10 @@ const AdminPanel = () => {
   const [creditAmount, setCreditAmount] = useState("");
   const [creditNote, setCreditNote] = useState("");
   const [credits, setCredits] = useState<Array<{ user_id: string; amount: number; credit_date: string }>>([]);
+  const [bulkOpen, setBulkOpen] = useState(false);
+  const [bulkPercent, setBulkPercent] = useState("");
+  const [bulkNote, setBulkNote] = useState("");
+  const [bulkBusy, setBulkBusy] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
