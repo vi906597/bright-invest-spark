@@ -321,6 +321,34 @@ const AdminPanel = () => {
           <DialogFooter><Button onClick={() => updateTx()}>Save Returns</Button></DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Credit Daily Interest Dialog */}
+      <Dialog open={!!creditUser} onOpenChange={(o) => !o && setCreditUser(null)}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Credit Daily Interest</DialogTitle></DialogHeader>
+          {creditUser && (
+            <div className="space-y-3">
+              <div className="p-3 rounded-lg bg-secondary">
+                <p className="text-sm font-medium">{creditUser.full_name || "User"}</p>
+                <p className="text-xs text-muted-foreground">Invested: ₹{userInvested(creditUser.user_id).toLocaleString()} · Total Interest: ₹{userInterest(creditUser.user_id).toLocaleString()}</p>
+              </div>
+              <div>
+                <label className="text-xs text-muted-foreground">Interest Amount (₹) *</label>
+                <Input type="number" placeholder="e.g. 50" value={creditAmount} onChange={(e) => setCreditAmount(e.target.value)} />
+              </div>
+              <div>
+                <label className="text-xs text-muted-foreground">Note (optional)</label>
+                <Input placeholder="Daily interest" value={creditNote} onChange={(e) => setCreditNote(e.target.value)} />
+              </div>
+              <p className="text-xs text-muted-foreground">User will see this on their dashboard as today's interest.</p>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCreditUser(null)}>Cancel</Button>
+            <Button onClick={submitCredit} className="bg-green-600 hover:bg-green-700"><Coins className="w-4 h-4 mr-1" />Credit</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
