@@ -1,0 +1,300 @@
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Shield, Users, FileCheck, CreditCard, Loader2, LogOut, CheckCircle2, XCircle, ExternalLink, RefreshCw } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { useAdminRole } from "@/hooks/useAdminRole";
+
+type Kyc = {
+  id: string; user_id: string; full_name_kyc: string; pan_number: string; aadhaar_number: string;
+  status: string; submitted_at: string; rejection_reason: string | null;
+  pan_document_url: string | null; aadhaar_front_url: string | null; aadhaar_back_url: string | null; selfie_url: string | null;
+};
+type Tx = {
+  id: string; user_id: string; plan_name: string; amount: number; status: string; type: string;
+  created_at: string; razorpay_payment_id: string | null; returns_amount: number | null; current_value: number | null;
+};
+type Profile = { user_id: string; full_name: string | null; phone: string | null; created_at: string };
+type Bank = { id: string; user_id: string; account_holder: string; account_number: string; ifsc_code: string; bank_name: string; is_primary: boolean };
+
+const AdminPanel = () => {
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const { loading: roleLoading, isAdmin } = useAdminRole();
+
+  const [authChecking, setAuthChecking] = useState(true);
+  const [kycs, setKycs] = useState<Kyc[]>([]);
+  const [txs, setTxs] = useState<Tx[]>([]);
+  const [profiles, setProfiles] = useState<Profile[]>([]);
+  const [banks, setBanks] = useState<Bank[]>([]);
+  const [reviewKyc, setReviewKyc] = useState<Kyc | null>(null);
+  const [rejectReason, setRejectReason] = useState("");
+  const [editTx, setEditTx] = useState<Tx | null>(null);
+  const [returnsInput, setReturnsInput] = useState("");
+  const [valueInput, setValueInput] = useState("");
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session) navigate("/secure-admin-92/login");
+      setAuthChecking(false);
+    });
+  }, [navigate]);
+
+  const loadAll = async () => {
+    const [k, t, p, b] = await Promise.all([
+      supabase.from("kyc_submissions").select("*").order("submitted_at", { ascending: false }),
+      supabase.from("transactions").select("*").order("created_at", { ascending: false }).limit(200),
+      supabase.from("profiles").select("user_id, full_name, phone, created_at").order("created_at", { ascending: false }),
+      supabase.from("bank_accounts").select("*").order("created_at", { ascending: false }),
+    ]);
+    if (k.data) setKycs(k.data as Kyc[]);
+    if (t.data) setTxs(t.data as Tx[]);
+    if (p.data) setProfiles(p.data as Profile[]);
+    if (b.data) setBanks(b.data as Bank[]);
+  };
+
+  useEffect(() => { if (isAdmin) loadAll(); }, [isAdmin]);
+
+  const signedUrl = async (path: string | null) => {
+    if (!path) return null;
+    const { data } = await supabase.storage.from("kyc-documents").createSignedUrl(path, 600);
+    return data?.signedUrl || null;
+  };
+
+  const openDoc = async (path: string | null) => {
+    const url = await signedUrl(path);
+    if (url) window.open(url, "_blank");
+    else toast({ title: "No document", variant: "destructive" });
+  };
+
+  const reviewDecision = async (status: "approved" | "rejected") => {
+    if (!reviewKyc) return;
+    const { error } = await supabase.from("kyc_submissions").update({
+      status,
+      rejection_reason: status === "rejected" ? rejectReason : null,
+      reviewed_at: new Date().toISOString(),
+    }).eq("id", reviewKyc.id);
+    if (error) return toast({ title: "Error", description: error.message, variant: "destructive" });
+    toast({ title: `KYC ${status}` });
+    setReviewKyc(null); setRejectReason(""); loadAll();
+  };
+
+  const updateTx = async (status?: string) => {
+    if (!editTx) return;
+    const payload: any = {};
+    if (status) payload.status = status;
+    if (returnsInput !== "") payload.returns_amount = Number(returnsInput);
+    if (valueInput !== "") payload.current_value = Number(valueInput);
+    const { error } = await supabase.from("transactions").update(payload).eq("id", editTx.id);
+    if (error) return toast({ title: "Error", description: error.message, variant: "destructive" });
+    toast({ title: "Updated" });
+    setEditTx(null); setReturnsInput(""); setValueInput(""); loadAll();
+  };
+
+  const logout = async () => { await supabase.auth.signOut(); navigate("/secure-admin-92/login"); };
+
+  if (authChecking || roleLoading) {
+    return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>;
+  }
+  if (!isAdmin) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-6">
+        <Card className="p-8 max-w-md text-center">
+          <Shield className="w-12 h-12 text-destructive mx-auto mb-3" />
+          <h1 className="text-xl font-bold">Access Denied</h1>
+          <p className="text-muted-foreground text-sm mt-2">You are not authorized to view this page.</p>
+          <Button className="mt-4" onClick={() => navigate("/secure-admin-92/login")}>Sign in as admin</Button>
+        </Card>
+      </div>
+    );
+  }
+
+  const pendingCount = kycs.filter(k => k.status === "pending").length;
+
+  return (
+    <div className="min-h-screen bg-background">
+      <header className="sticky top-0 z-50 glass-card border-b border-border">
+        <div className="container mx-auto flex items-center justify-between py-4 px-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-destructive/10 flex items-center justify-center">
+              <Shield className="w-5 h-5 text-destructive" />
+            </div>
+            <div>
+              <h1 className="font-bold">Admin Panel</h1>
+              <p className="text-xs text-muted-foreground">Secure access</p>
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <Button variant="ghost" size="icon" onClick={loadAll}><RefreshCw className="w-4 h-4" /></Button>
+            <Button variant="outline" size="sm" onClick={logout}><LogOut className="w-4 h-4 mr-2" />Logout</Button>
+          </div>
+        </div>
+      </header>
+
+      <main className="container mx-auto px-4 py-6 max-w-7xl space-y-5">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <Card className="p-4"><p className="text-xs text-muted-foreground">Users</p><p className="text-2xl font-bold">{profiles.length}</p></Card>
+          <Card className="p-4"><p className="text-xs text-muted-foreground">Pending KYC</p><p className="text-2xl font-bold text-amber-500">{pendingCount}</p></Card>
+          <Card className="p-4"><p className="text-xs text-muted-foreground">Transactions</p><p className="text-2xl font-bold">{txs.length}</p></Card>
+          <Card className="p-4"><p className="text-xs text-muted-foreground">Bank Accounts</p><p className="text-2xl font-bold">{banks.length}</p></Card>
+        </div>
+
+        <Tabs defaultValue="kyc">
+          <TabsList>
+            <TabsTrigger value="kyc"><FileCheck className="w-4 h-4 mr-1" />KYC</TabsTrigger>
+            <TabsTrigger value="tx"><CreditCard className="w-4 h-4 mr-1" />Transactions</TabsTrigger>
+            <TabsTrigger value="users"><Users className="w-4 h-4 mr-1" />Users</TabsTrigger>
+            <TabsTrigger value="banks">Banks</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="kyc">
+            <Card className="p-4 overflow-x-auto">
+              <Table>
+                <TableHeader><TableRow>
+                  <TableHead>Name</TableHead><TableHead>PAN</TableHead><TableHead>Aadhaar</TableHead>
+                  <TableHead>Status</TableHead><TableHead>Submitted</TableHead><TableHead>Action</TableHead>
+                </TableRow></TableHeader>
+                <TableBody>
+                  {kycs.map(k => (
+                    <TableRow key={k.id}>
+                      <TableCell className="font-medium">{k.full_name_kyc}</TableCell>
+                      <TableCell className="font-mono text-xs">{k.pan_number}</TableCell>
+                      <TableCell className="font-mono text-xs">****{k.aadhaar_number.slice(-4)}</TableCell>
+                      <TableCell><span className={`text-xs px-2 py-0.5 rounded-full ${k.status === "approved" ? "bg-green-500/10 text-green-500" : k.status === "rejected" ? "bg-destructive/10 text-destructive" : "bg-amber-500/10 text-amber-500"}`}>{k.status}</span></TableCell>
+                      <TableCell className="text-xs">{new Date(k.submitted_at).toLocaleDateString()}</TableCell>
+                      <TableCell><Button size="sm" variant="outline" onClick={() => setReviewKyc(k)}>Review</Button></TableCell>
+                    </TableRow>
+                  ))}
+                  {kycs.length === 0 && <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground">No KYC submissions</TableCell></TableRow>}
+                </TableBody>
+              </Table>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="tx">
+            <Card className="p-4 overflow-x-auto">
+              <Table>
+                <TableHeader><TableRow>
+                  <TableHead>Date</TableHead><TableHead>Plan</TableHead><TableHead>Amount</TableHead>
+                  <TableHead>Type</TableHead><TableHead>Status</TableHead><TableHead>Returns</TableHead><TableHead>Action</TableHead>
+                </TableRow></TableHeader>
+                <TableBody>
+                  {txs.map(t => (
+                    <TableRow key={t.id}>
+                      <TableCell className="text-xs">{new Date(t.created_at).toLocaleDateString()}</TableCell>
+                      <TableCell>{t.plan_name}</TableCell>
+                      <TableCell>₹{Number(t.amount).toLocaleString()}</TableCell>
+                      <TableCell className="capitalize text-xs">{t.type}</TableCell>
+                      <TableCell><span className={`text-xs px-2 py-0.5 rounded-full ${t.status === "success" ? "bg-green-500/10 text-green-500" : t.status === "failed" ? "bg-destructive/10 text-destructive" : "bg-amber-500/10 text-amber-500"}`}>{t.status}</span></TableCell>
+                      <TableCell className={`text-xs ${Number(t.returns_amount) >= 0 ? "text-green-500" : "text-destructive"}`}>₹{Number(t.returns_amount || 0).toLocaleString()}</TableCell>
+                      <TableCell><Button size="sm" variant="outline" onClick={() => { setEditTx(t); setReturnsInput(String(t.returns_amount || "")); setValueInput(String(t.current_value || "")); }}>Edit</Button></TableCell>
+                    </TableRow>
+                  ))}
+                  {txs.length === 0 && <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground">No transactions</TableCell></TableRow>}
+                </TableBody>
+              </Table>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="users">
+            <Card className="p-4 overflow-x-auto">
+              <Table>
+                <TableHeader><TableRow><TableHead>Name</TableHead><TableHead>Phone</TableHead><TableHead>User ID</TableHead><TableHead>Joined</TableHead></TableRow></TableHeader>
+                <TableBody>
+                  {profiles.map(p => (
+                    <TableRow key={p.user_id}>
+                      <TableCell>{p.full_name || "—"}</TableCell>
+                      <TableCell>{p.phone || "—"}</TableCell>
+                      <TableCell className="font-mono text-xs">{p.user_id.slice(0, 8)}...</TableCell>
+                      <TableCell className="text-xs">{new Date(p.created_at).toLocaleDateString()}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="banks">
+            <Card className="p-4 overflow-x-auto">
+              <Table>
+                <TableHeader><TableRow><TableHead>Holder</TableHead><TableHead>Bank</TableHead><TableHead>Account</TableHead><TableHead>IFSC</TableHead><TableHead>Primary</TableHead></TableRow></TableHeader>
+                <TableBody>
+                  {banks.map(b => (
+                    <TableRow key={b.id}>
+                      <TableCell>{b.account_holder}</TableCell>
+                      <TableCell>{b.bank_name}</TableCell>
+                      <TableCell className="font-mono text-xs">****{b.account_number.slice(-4)}</TableCell>
+                      <TableCell className="font-mono text-xs">{b.ifsc_code}</TableCell>
+                      <TableCell>{b.is_primary && <CheckCircle2 className="w-4 h-4 text-green-500" />}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </main>
+
+      {/* KYC Review Dialog */}
+      <Dialog open={!!reviewKyc} onOpenChange={(o) => !o && setReviewKyc(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader><DialogTitle>Review KYC — {reviewKyc?.full_name_kyc}</DialogTitle></DialogHeader>
+          {reviewKyc && (
+            <div className="space-y-3">
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                <div><p className="text-xs text-muted-foreground">PAN</p><p className="font-mono">{reviewKyc.pan_number}</p></div>
+                <div><p className="text-xs text-muted-foreground">Aadhaar</p><p className="font-mono">{reviewKyc.aadhaar_number}</p></div>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <Button variant="outline" size="sm" onClick={() => openDoc(reviewKyc.pan_document_url)}><ExternalLink className="w-3 h-3 mr-1" />PAN Doc</Button>
+                <Button variant="outline" size="sm" onClick={() => openDoc(reviewKyc.aadhaar_front_url)}><ExternalLink className="w-3 h-3 mr-1" />Aadhaar Front</Button>
+                <Button variant="outline" size="sm" onClick={() => openDoc(reviewKyc.aadhaar_back_url)}><ExternalLink className="w-3 h-3 mr-1" />Aadhaar Back</Button>
+                <Button variant="outline" size="sm" onClick={() => openDoc(reviewKyc.selfie_url)}><ExternalLink className="w-3 h-3 mr-1" />Selfie</Button>
+              </div>
+              <Textarea placeholder="Rejection reason (if rejecting)" value={rejectReason} onChange={(e) => setRejectReason(e.target.value)} />
+            </div>
+          )}
+          <DialogFooter className="gap-2">
+            <Button variant="destructive" onClick={() => reviewDecision("rejected")}><XCircle className="w-4 h-4 mr-1" />Reject</Button>
+            <Button onClick={() => reviewDecision("approved")} className="bg-green-600 hover:bg-green-700"><CheckCircle2 className="w-4 h-4 mr-1" />Approve</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Transaction Edit Dialog */}
+      <Dialog open={!!editTx} onOpenChange={(o) => !o && setEditTx(null)}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Edit Transaction</DialogTitle></DialogHeader>
+          {editTx && (
+            <div className="space-y-3">
+              <p className="text-sm">{editTx.plan_name} — ₹{Number(editTx.amount).toLocaleString()}</p>
+              <div>
+                <label className="text-xs text-muted-foreground">Returns Amount (₹)</label>
+                <Input type="number" value={returnsInput} onChange={(e) => setReturnsInput(e.target.value)} />
+              </div>
+              <div>
+                <label className="text-xs text-muted-foreground">Current Value (₹)</label>
+                <Input type="number" value={valueInput} onChange={(e) => setValueInput(e.target.value)} />
+              </div>
+              <div className="flex gap-2">
+                <Button size="sm" variant="outline" onClick={() => updateTx("success")}>Mark Success</Button>
+                <Button size="sm" variant="outline" onClick={() => updateTx("failed")}>Mark Failed</Button>
+                <Button size="sm" variant="outline" onClick={() => updateTx("pending")}>Mark Pending</Button>
+              </div>
+            </div>
+          )}
+          <DialogFooter><Button onClick={() => updateTx()}>Save Returns</Button></DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
+
+export default AdminPanel;
