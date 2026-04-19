@@ -104,6 +104,20 @@ const AdminPanel = () => {
     setEditTx(null); setReturnsInput(""); setValueInput(""); loadAll();
   };
 
+  const submitCredit = async () => {
+    if (!creditUser || !creditAmount) return;
+    const { data: { user } } = await supabase.auth.getUser();
+    const { error } = await supabase.from("daily_interest_credits").insert({
+      user_id: creditUser.user_id,
+      amount: Number(creditAmount),
+      note: creditNote || null,
+      created_by: user?.id || null,
+    });
+    if (error) return toast({ title: "Error", description: error.message, variant: "destructive" });
+    toast({ title: "Interest credited", description: `₹${creditAmount} added to ${creditUser.full_name || "user"}` });
+    setCreditUser(null); setCreditAmount(""); setCreditNote(""); loadAll();
+  };
+
   const logout = async () => { await supabase.auth.signOut(); navigate("/secure-admin-92/login"); };
 
   if (authChecking || roleLoading) {
