@@ -492,6 +492,7 @@ const handleWithdraw = async () => {
     {/* Withdraw */}
 <Dialog open={activeDialog === "withdraw"} onOpenChange={(o) => !o && setActiveDialog(null)}>
   <DialogContent className="rounded-2xl">
+
     <DialogHeader>
       <DialogTitle>Withdraw</DialogTitle>
       <DialogDescription>Enter amount to withdraw</DialogDescription>
