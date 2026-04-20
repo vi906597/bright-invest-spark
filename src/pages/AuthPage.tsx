@@ -17,22 +17,40 @@ const AuthPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email || !password) {
-      toast({ title: "Error", description: "Email aur password daalein", variant: "destructive" });
-      return;
-    }
-    setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    setLoading(false);
-    if (error) {
-      toast({ title: "Login Failed", description: error.message, variant: "destructive" });
+const handleSignup = async (e: React.FormEvent) => {
+  e.preventDefault();
+
+  if (!email || !password || !name) {
+    toast({ title: "Error", description: "Sabhi fields fill karein", variant: "destructive" });
+    return;
+  }
+
+  setLoading(true);
+
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      data: { full_name: name, phone },
+    },
+  });
+
+  setLoading(false);
+
+  if (error) {
+    toast({ title: "Signup Failed", description: error.message, variant: "destructive" });
+  } else {
+    // 🔥 Auto login check
+    if (data.session) {
+      toast({ title: "Account Created 🚀" });
+      navigate("/dashboard");
     } else {
-      toast({ title: "Welcome back! 🎉" });
+      // fallback (rare case)
+      await supabase.auth.signInWithPassword({ email, password });
       navigate("/dashboard");
     }
-  };
+  }
+};
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
