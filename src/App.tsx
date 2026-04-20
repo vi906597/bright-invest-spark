@@ -3,7 +3,7 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import LandingPage from "./pages/LandingPage";
+
 import AuthPage from "./pages/AuthPage";
 import Dashboard from "./pages/Dashboard";
 import SIPCalculator from "./pages/SIPCalculator";
@@ -24,8 +24,9 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/auth" element={<AuthPage />} />
+          {/* ✅ Landing हटाया */}
+          <Route path="/" element={<AuthPage />} />
+
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/calculator" element={<SIPCalculator />} />
           <Route path="/transactions" element={<TransactionHistory />} />
