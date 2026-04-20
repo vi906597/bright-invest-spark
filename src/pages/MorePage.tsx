@@ -43,13 +43,30 @@ const MorePage = () => {
   const [loading, setLoading] = useState(true);
   const [activeDialog, setActiveDialog] = useState<DialogKey>(null);
 const [withdrawAmount, setWithdrawAmount] = useState("");
-const [bankAccounts, setBankAccounts] = useState([]); 
+const [accounts, setAccounts] = useState<any[]>([]);
   useEffect(() => {
-  const data = JSON.parse(localStorage.getItem("banks") || "[]");
-  setBankAccounts(data);
-}, []);
+  const fetchBanks = async () => {
+    if (!user) return;
 
-const userBank = bankAccounts.length > 0 ? bankAccounts[0] : null;
+    const { data, error } = await supabase
+      .from("bank_accounts")
+      .select("*")
+      .eq("user_id", user.id);
+
+    if (error) {
+      console.log(error);
+      return;
+    }
+
+    if (data) {
+      setAccounts(data);
+    }
+  };
+
+  fetchBanks();
+}, [user]);
+
+const userBank = accounts.find(acc => acc.is_primary) || null;
 
   // Editable fields
   const [editName, setEditName] = useState("");
@@ -195,6 +212,40 @@ const userBank = bankAccounts.length > 0 ? bankAccounts[0] : null;
   const initials = displayName.charAt(0).toUpperCase();
 
   const open = (k: DialogKey) => setActiveDialog(k);
+
+// 👇 YAHI PASTE KAR (function yaha rahega)
+const handleWithdraw = async () => {
+  if (!withdrawAmount || withdrawAmount <= 0) {
+    toast({ title: "Invalid amount", description: "Enter valid amount" });
+    return;
+  }
+
+  if (!userBank) {
+    toast({ title: "No bank account", description: "Please add primary bank" });
+    return;
+  }
+
+  const { error } = await supabase.from("withdrawals").insert({
+    user_id: user.id,
+    amount: Number(withdrawAmount),
+    bank_name: userBank.bank_name,
+    account_number: userBank.account_number,
+    account_holder: userBank.account_holder,
+  });
+
+  if (error) {
+    toast({ title: "Error", description: error.message });
+    return;
+  }
+
+  toast({
+    title: "Withdraw request sent 💸",
+    description: "Admin will process your request",
+  });
+
+  setWithdrawAmount("");
+  setActiveDialog(null);
+};
 
   const sections = [
     {
@@ -472,7 +523,7 @@ const userBank = bankAccounts.length > 0 ? bankAccounts[0] : null;
 
     <DialogFooter>
       <Button
-        onClick={() => {
+        onClick={handleWithdraw} 
           if (!withdrawAmount || withdrawAmount <= 0) {
             toast({ title: "Invalid amount", description: "Enter valid amount" });
             return;
@@ -484,7 +535,38 @@ const userBank = bankAccounts.length > 0 ? bankAccounts[0] : null;
           }
 
           // API call ya logic yaha add karo
-          console.log("Withdraw:", withdrawAmount);
+          const handleWithdraw = async () => {
+  if (!withdrawAmount || withdrawAmount <= 0) {
+    toast({ title: "Invalid amount", description: "Enter valid amount" });
+    return;
+  }
+
+  if (!userBank) {
+    toast({ title: "No bank account", description: "Please add primary bank" });
+    return;
+  }
+
+  const { error } = await supabase.from("withdrawals").insert({
+    user_id: user.id,
+    amount: Number(withdrawAmount),
+    bank_name: userBank.bank_name,
+    account_number: userBank.account_number,
+    account_holder: userBank.account_holder,
+  });
+
+  if (error) {
+    toast({ title: "Error", description: error.message });
+    return;
+  }
+
+  toast({
+    title: "Withdraw request sent 💸",
+    description: "Admin will process your request",
+  });
+
+  setWithdrawAmount("");
+  setActiveDialog(null);
+};
 
           toast({
             title: "Withdraw request sent",
