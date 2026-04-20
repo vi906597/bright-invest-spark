@@ -203,7 +203,7 @@ const Dashboard = () => {
         {/* Welcome */}
         <div className="mb-8 animate-fade-in">
           <h1 className="text-3xl font-bold text-foreground">
-            Namaste, <span className="text-primary">{userName}</span> 👋
+            Hello, <span className="text-primary">{userName}</span> 👋
           </h1>
           <p className="text-muted-foreground mt-1">Start your wealth creation journey with monthly SIP</p>
         </div>
