@@ -55,11 +55,11 @@ const handleSignup = async (e: React.FormEvent) => {
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password || !name) {
-      toast({ title: "Error", description: "Sabhi fields fill karein", variant: "destructive" });
+      toast({ title: "Error", description: "Fill in all fields", variant: "destructive" });
       return;
     }
     if (password.length < 6) {
-      toast({ title: "Error", description: "Password kam se kam 6 characters ka hona chahiye", variant: "destructive" });
+      toast({ title: "Error", description: "Password must be at least 6 characters long", variant: "destructive" });
       return;
     }
     setLoading(true);
@@ -77,7 +77,7 @@ const handleSignup = async (e: React.FormEvent) => {
     } else {
       toast({
         title: "Account Created! 🎉",
-        description: "A verification link has been sent to your email. Please verify..",
+        description: "signup success please login",
       });
     }
   };
