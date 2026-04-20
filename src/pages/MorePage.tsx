@@ -41,6 +41,8 @@ const MorePage = () => {
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [activeDialog, setActiveDialog] = useState<DialogKey>(null);
+  const [withdrawAmount, setWithdrawAmount] = useState("");
+  const [bankAccounts, setBankAccounts] = useState([]);
 
   // Editable fields
   const [editName, setEditName] = useState("");
@@ -429,33 +431,63 @@ const MorePage = () => {
       {/* Bank */}
       {user && <BankAccountsDialog open={activeDialog === "bank"} onOpenChange={(o) => !o && setActiveDialog(null)} userId={user.id} />}
 
-      {/* Withdraw */}
+    {/* Withdraw */}
 <Dialog open={activeDialog === "withdraw"} onOpenChange={(o) => !o && setActiveDialog(null)}>
   <DialogContent className="rounded-2xl">
     <DialogHeader>
       <DialogTitle>Withdraw</DialogTitle>
-      <DialogDescription>Linked bank account se withdrawal request bhejo</DialogDescription>
+      <DialogDescription>Enter amount to withdraw</DialogDescription>
     </DialogHeader>
 
+    {/* Amount Input */}
     <div className="space-y-3">
+      <div>
+        <label className="text-sm font-medium">Amount (₹)</label>
+        <input
+          type="number"
+          placeholder="Enter amount"
+          value={withdrawAmount}
+          onChange={(e) => setWithdrawAmount(e.target.value)}
+          className="w-full mt-1 p-2 rounded-xl border border-border bg-background"
+        />
+      </div>
+
+      {/* Auto Selected Bank */}
       <div className="p-3 rounded-xl border border-border bg-secondary/30">
         <p className="text-sm font-medium">Bank Account</p>
-        <p className="text-xs text-muted-foreground">Aapka linked bank account use hoga</p>
+        <p className="text-xs text-muted-foreground">
+          {userBank ? `${userBank.bankName} - ${userBank.accountNumber}` : "No bank linked"}
+        </p>
       </div>
-      <p className="text-xs text-muted-foreground">
-        Withdrawal request support review ke baad process hogi.
-      </p>
     </div>
 
     <DialogFooter>
       <Button
         onClick={() => {
-          toast({ title: "Withdraw request sent", description: "Support aapse contact karegi." });
+          if (!withdrawAmount || withdrawAmount <= 0) {
+            toast({ title: "Invalid amount", description: "Enter valid amount" });
+            return;
+          }
+
+          if (!userBank) {
+            toast({ title: "No bank account", description: "Please add bank account first" });
+            return;
+          }
+
+          // API call ya logic yaha add karo
+          console.log("Withdraw:", withdrawAmount);
+
+          toast({
+            title: "Withdraw request sent",
+            description: `₹${withdrawAmount} withdraw request submitted`,
+          });
+
+          setWithdrawAmount("");
           setActiveDialog(null);
         }}
         className="rounded-xl"
       >
-        Request Withdraw
+        Withdraw Now
       </Button>
     </DialogFooter>
   </DialogContent>
