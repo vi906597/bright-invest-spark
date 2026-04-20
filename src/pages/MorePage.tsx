@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
@@ -42,7 +43,11 @@ const MorePage = () => {
   const [loading, setLoading] = useState(true);
   const [activeDialog, setActiveDialog] = useState<DialogKey>(null);
 const [withdrawAmount, setWithdrawAmount] = useState("");
-const [bankAccounts, setBankAccounts] = useState([]);
+const [bankAccounts, setBankAccounts] = useState([]); 
+  useEffect(() => {
+  const data = JSON.parse(localStorage.getItem("banks") || "[]");
+  setBankAccounts(data);
+}, []);
 
 const userBank = bankAccounts.length > 0 ? bankAccounts[0] : null;
 
@@ -457,9 +462,11 @@ const userBank = bankAccounts.length > 0 ? bankAccounts[0] : null;
       {/* Auto Selected Bank */}
       <div className="p-3 rounded-xl border border-border bg-secondary/30">
         <p className="text-sm font-medium">Bank Account</p>
-        <p className="text-xs text-muted-foreground">
-          {userBank ? `${userBank.bankName} - ${userBank.accountNumber}` : "No bank linked"}
-        </p>
+       <p className="text-xs text-muted-foreground">
+  {userBank
+    ? `${userBank.bank_name} - ****${userBank.account_number.slice(-4)}`
+    : "No bank linked"}
+</p>
       </div>
     </div>
 
