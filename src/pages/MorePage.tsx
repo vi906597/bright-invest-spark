@@ -240,7 +240,7 @@ const handleWithdraw = async () => {
 
   toast({
     title: "Withdraw request sent 💸",
-    description: "Admin will process your request",
+    description: "process your request",
   });
 
   setWithdrawAmount("");
@@ -523,68 +523,15 @@ const handleWithdraw = async () => {
     </div>
 
     <DialogFooter>
-      <Button
-        onClick={handleWithdraw} 
-          if (!withdrawAmount || withdrawAmount <= 0) {
-            toast({ title: "Invalid amount", description: "Enter valid amount" });
-            return;
-          }
-
-          if (!userBank) {
-            toast({ title: "No bank account", description: "Please add bank account first" });
-            return;
-          }
-
-          // API call ya logic yaha add karo
-          const handleWithdraw = async () => {
-  if (!withdrawAmount || withdrawAmount <= 0) {
-    toast({ title: "Invalid amount", description: "Enter valid amount" });
-    return;
-  }
-
-  if (!userBank) {
-    toast({ title: "No bank account", description: "Please add primary bank" });
-    return;
-  }
-
-  const { error } = await supabase.from("withdrawals").insert({
-    user_id: user.id,
-    amount: Number(withdrawAmount),
-    bank_name: userBank.bank_name,
-    account_number: userBank.account_number,
-    account_holder: userBank.account_holder,
-  });
-
-  if (error) {
-    toast({ title: "Error", description: error.message });
-    return;
-  }
-
-  toast({
-    title: "Withdraw request sent 💸",
-    description: "Admin will process your request",
-  });
-
-  setWithdrawAmount("");
-  setActiveDialog(null);
-};
-
-          toast({
-            title: "Withdraw request sent",
-            description: `₹${withdrawAmount} withdraw request submitted`,
-          });
-
-          setWithdrawAmount("");
-          setActiveDialog(null);
-        }}
-        className="rounded-xl"
-      >
-        Withdraw Now
-      </Button>
-    </DialogFooter>
-  </DialogContent>
+  <Button
+    onClick={handleWithdraw}
+    className="rounded-xl"
+  >
+    Withdraw Now
+  </Button>
+</DialogFooter>
+</DialogContent>
 </Dialog>
-
       {/* eAisha Card */}
       {user && <EaishaCardDialog open={activeDialog === "card"} onOpenChange={(o) => !o && setActiveDialog(null)} userId={user.id} userEmail={user.email} userName={displayName} userPhone={phoneNumber} />}
 
