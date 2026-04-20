@@ -41,8 +41,10 @@ const MorePage = () => {
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [activeDialog, setActiveDialog] = useState<DialogKey>(null);
-  const [withdrawAmount, setWithdrawAmount] = useState("");
-  const [bankAccounts, setBankAccounts] = useState([]);
+const [withdrawAmount, setWithdrawAmount] = useState("");
+const [bankAccounts, setBankAccounts] = useState([]);
+
+const userBank = bankAccounts.length > 0 ? bankAccounts[0] : null;
 
   // Editable fields
   const [editName, setEditName] = useState("");
