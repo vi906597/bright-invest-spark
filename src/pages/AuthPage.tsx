@@ -17,49 +17,31 @@ const AuthPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-const handleSignup = async (e: React.FormEvent) => {
-  e.preventDefault();
-
-  if (!email || !password || !name) {
-    toast({ title: "Error", description: "Sabhi fields fill karein", variant: "destructive" });
-    return;
-  }
-
-  setLoading(true);
-
-  const { data, error } = await supabase.auth.signUp({
-    email,
-    password,
-    options: {
-      data: { full_name: name, phone },
-    },
-  });
-
-  setLoading(false);
-
-  if (error) {
-    toast({ title: "Signup Failed", description: error.message, variant: "destructive" });
-  } else {
-    // 🔥 Auto login check
-    if (data.session) {
-      toast({ title: "Account Created 🚀" });
-      navigate("/dashboard");
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || !password) {
+      toast({ title: "Error", description: "Email aur password daalein", variant: "destructive" });
+      return;
+    }
+    setLoading(true);
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    setLoading(false);
+    if (error) {
+      toast({ title: "Login Failed", description: error.message, variant: "destructive" });
     } else {
-      // fallback (rare case)
-      await supabase.auth.signInWithPassword({ email, password });
+      toast({ title: "Welcome back! 🎉" });
       navigate("/dashboard");
     }
-  }
-};
+  };
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password || !name) {
-      toast({ title: "Error", description: "Fill in all fields", variant: "destructive" });
+      toast({ title: "Error", description: "Sabhi fields fill karein", variant: "destructive" });
       return;
     }
     if (password.length < 6) {
-      toast({ title: "Error", description: "Password must be at least 6 characters long", variant: "destructive" });
+      toast({ title: "Error", description: "Password kam se kam 6 characters ka hona chahiye", variant: "destructive" });
       return;
     }
     setLoading(true);
@@ -77,7 +59,7 @@ const handleSignup = async (e: React.FormEvent) => {
     } else {
       toast({
         title: "Account Created! 🎉",
-        description: "signup success please login",
+        description: "✅ ACCOUNT IS CREATED SUCCESSSFUL PLEASE LOGIN",
       });
     }
   };
