@@ -19,6 +19,9 @@ const BankAccountsDialog = ({ open, onOpenChange, userId }: Props) => {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [saving, setSaving] = useState(false);
+  useEffect(() => {
+  localStorage.setItem("banks", JSON.stringify(accounts));
+}, [accounts]);
   const [form, setForm] = useState({
     account_holder: "",
     account_number: "",
