@@ -1,4 +1,6 @@
 import React, { useEffect, useState } from "react";
+import { Download } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import {
   User, Bell, Shield, CreditCard, FileText, HelpCircle,
@@ -24,8 +26,9 @@ import EaishaCardDialog from "@/components/EaishaCardDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
+// 1) DialogKey me withdraw add karo
 type DialogKey =
-  | "personal" | "phone" | "kyc" | "bank" | "security" | "card"
+  | "personal" | "phone" | "kyc" | "bank" | "withdraw" | "security" | "card"
   | "watchlist" | "statements"
   | "language" | "applock"
   | "help" | "contact" | "refer" | "about"
@@ -208,6 +211,7 @@ const MorePage = () => {
         { icon: Shield, label: "KYC Verification", desc: "Complete your KYC", badge: "Pending", action: () => open("kyc") },
         { icon: CreditCard, label: "ZYPEUS CARD", desc: "View your unique investor card", badge: "New", badgeColor: "text-primary bg-primary/10", action: () => open("card") },
         { icon: CreditCard, label: "Bank Accounts", desc: "Manage linked accounts", action: () => open("bank") },
+        { icon: Download, label: "Withdraw", desc: "Request fund withdrawal", action: () => open("withdraw") },
         { icon: Lock, label: "Security", desc: "Password, 2FA settings", action: () => open("security") },
       ],
     },
@@ -234,7 +238,7 @@ const MorePage = () => {
         { icon: HelpCircle, label: "Help & FAQ", desc: "Get answers", action: () => open("help") },
         { icon: MessageSquare, label: "Contact Support", desc: "Chat with us", action: () => open("contact") },
         { icon: Share2, label: "Refer & Earn", desc: "Invite friends, earn rewards", action: () => open("refer") },
-        { icon: Info, label: "About eAisha", desc: "Version 1.0.0", action: () => open("about") },
+        { icon: Info, label: "About ZYPEUS", desc: "Version 1.0.0", action: () => open("about") },
       ],
     },
   ];
@@ -425,6 +429,38 @@ const MorePage = () => {
       {/* Bank */}
       {user && <BankAccountsDialog open={activeDialog === "bank"} onOpenChange={(o) => !o && setActiveDialog(null)} userId={user.id} />}
 
+      {/* Withdraw */}
+<Dialog open={activeDialog === "withdraw"} onOpenChange={(o) => !o && setActiveDialog(null)}>
+  <DialogContent className="rounded-2xl">
+    <DialogHeader>
+      <DialogTitle>Withdraw</DialogTitle>
+      <DialogDescription>Linked bank account se withdrawal request bhejo</DialogDescription>
+    </DialogHeader>
+
+    <div className="space-y-3">
+      <div className="p-3 rounded-xl border border-border bg-secondary/30">
+        <p className="text-sm font-medium">Bank Account</p>
+        <p className="text-xs text-muted-foreground">Aapka linked bank account use hoga</p>
+      </div>
+      <p className="text-xs text-muted-foreground">
+        Withdrawal request support review ke baad process hogi.
+      </p>
+    </div>
+
+    <DialogFooter>
+      <Button
+        onClick={() => {
+          toast({ title: "Withdraw request sent", description: "Support aapse contact karegi." });
+          setActiveDialog(null);
+        }}
+        className="rounded-xl"
+      >
+        Request Withdraw
+      </Button>
+    </DialogFooter>
+  </DialogContent>
+</Dialog>
+
       {/* eAisha Card */}
       {user && <EaishaCardDialog open={activeDialog === "card"} onOpenChange={(o) => !o && setActiveDialog(null)} userId={user.id} userEmail={user.email} userName={displayName} userPhone={phoneNumber} />}
 
@@ -548,17 +584,17 @@ const MorePage = () => {
             <DialogDescription>We're here to help, 24/7</DialogDescription>
           </DialogHeader>
           <div className="space-y-2">
-            <a href="mailto:support@eaisha.com" className="flex items-center gap-3 p-3 rounded-xl border border-border hover:bg-secondary/50">
+            <a href="mailto:zypeus90@gmail.com" className="flex items-center gap-3 p-3 rounded-xl border border-border hover:bg-secondary/50">
               <Mail className="w-4 h-4 text-primary" />
-              <div className="flex-1"><p className="text-sm font-medium">Email</p><p className="text-xs text-muted-foreground">support@eaisha.com</p></div>
+              <div className="flex-1"><p className="text-sm font-medium">Email</p><p className="text-xs text-muted-foreground">zypeus90@gmail.com</p></div>
               <ExternalLink className="w-4 h-4 text-muted-foreground" />
             </a>
-            <a href="tel:+911800123456" className="flex items-center gap-3 p-3 rounded-xl border border-border hover:bg-secondary/50">
+            <a href="tel:+918298813282" className="flex items-center gap-3 p-3 rounded-xl border border-border hover:bg-secondary/50">
               <Phone className="w-4 h-4 text-primary" />
-              <div className="flex-1"><p className="text-sm font-medium">Call</p><p className="text-xs text-muted-foreground">+91 1800-123-456</p></div>
+              <div className="flex-1"><p className="text-sm font-medium">Call</p><p className="text-xs text-muted-foreground">+91 8298813282</p></div>
               <ExternalLink className="w-4 h-4 text-muted-foreground" />
             </a>
-            <a href="https://wa.me/911800123456" target="_blank" rel="noreferrer" className="flex items-center gap-3 p-3 rounded-xl border border-border hover:bg-secondary/50">
+            <a href="https://wa.me/918298813282" target="_blank" rel="noreferrer" className="flex items-center gap-3 p-3 rounded-xl border border-border hover:bg-secondary/50">
               <MessageSquare className="w-4 h-4 text-primary" />
               <div className="flex-1"><p className="text-sm font-medium">WhatsApp</p><p className="text-xs text-muted-foreground">Chat with us</p></div>
               <ExternalLink className="w-4 h-4 text-muted-foreground" />
@@ -593,13 +629,13 @@ const MorePage = () => {
       <Dialog open={activeDialog === "about"} onOpenChange={(o) => !o && setActiveDialog(null)}>
         <DialogContent className="rounded-2xl">
           <DialogHeader>
-            <DialogTitle>About eAisha Invest</DialogTitle>
+            <DialogTitle>About ZYPEUS</DialogTitle>
           </DialogHeader>
           <div className="space-y-3 text-sm text-center">
             <div className="w-16 h-16 rounded-2xl gradient-primary flex items-center justify-center mx-auto">
               <Sparkles className="w-8 h-8 text-primary-foreground" />
             </div>
-            <p className="font-bold text-base">eAisha Invest</p>
+            <p className="font-bold text-base">ZYPEUS</p>
             <p className="text-muted-foreground">Version 1.0.0</p>
             <p className="text-xs text-muted-foreground">Smart SIP investing platform powered by AI insights. Build wealth, one SIP at a time.</p>
             <div className="flex justify-center gap-3 pt-2 text-xs">
