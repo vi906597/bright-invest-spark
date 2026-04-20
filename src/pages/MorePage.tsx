@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import { useEffect } from "react";
 import { Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
@@ -44,6 +43,7 @@ const MorePage = () => {
   const [activeDialog, setActiveDialog] = useState<DialogKey>(null);
 const [withdrawAmount, setWithdrawAmount] = useState("");
 const [accounts, setAccounts] = useState<any[]>([]);
+  const [totalValue, setTotalValue] = useState(0);
   useEffect(() => {
   const fetchBanks = async () => {
     if (!user) return;
@@ -65,7 +65,28 @@ const [accounts, setAccounts] = useState<any[]>([]);
 
   fetchBanks();
 }, [user]);
+  useEffect(() => {
+  const fetchTotalValue = async () => {
+    if (!user) return;
 
+    const { data, error } = await supabase
+      .from("transactions")
+      .select("amount")
+      .eq("user_id", user.id);
+
+    if (error) {
+      console.log(error);
+      return;
+    }
+
+    if (data) {
+      const total = data.reduce((sum, item) => sum + Number(item.amount), 0);
+      setTotalValue(total);
+    }
+  };
+
+  fetchTotalValue();
+}, [user]);
 const userBank = accounts.find(acc => acc.is_primary) || null;
 
   // Editable fields
@@ -220,6 +241,15 @@ const handleWithdraw = async () => {
     return;
   }
 
+  // 👇 YAHI ADD KARNA HAI
+  if (Number(withdrawAmount) > totalValue) {
+    toast({
+      title: "Limit exceeded ❌",
+      description: `Max withdraw ₹${totalValue}`,
+    });
+    return;
+  }
+
   if (!userBank) {
     toast({ title: "No bank account", description: "Please add primary bank" });
     return;
@@ -240,7 +270,7 @@ const handleWithdraw = async () => {
 
   toast({
     title: "Withdraw request sent 💸",
-    description: "process your request",
+    description: "Admin will process your request",
   });
 
   setWithdrawAmount("");
