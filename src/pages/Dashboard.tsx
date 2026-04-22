@@ -66,7 +66,7 @@ const Dashboard = () => {
     totalInterest: 0,
   });
 
- const loadStats = async (uid: string) => {
+const loadStats = async (uid: string) => {
   const { data } = await supabase
     .from("transactions")
     .select("amount, current_value, status, type, plan_name")
@@ -81,18 +81,24 @@ const Dashboard = () => {
 
   const txs = data || [];
 
+  // 🔥 DEBUG (optional — console me check kar lena)
+  console.log("ALL TX:", txs);
+
+  // ✅ FIXED INVEST CALCULATION
   const invested = txs
     .filter((t) => {
-      const type = (t.type || "").toLowerCase();
-      const status = (t.status || "").toLowerCase();
-      return status === "success" && (type === "sip" || type === "deposit" || type === "credit");
+      const type = (t.type || "").toLowerCase().trim();
+      const status = (t.status || "").toLowerCase().trim();
+
+      return (
+        status === "success" &&
+        (type === "sip" || type === "deposit" || type === "credit")
+      );
     })
     .reduce((s, t) => s + Number(t.amount || 0), 0);
 
-  const currentValueFromTx = txs.reduce(
-    (s, t) => s + Number(t.current_value || 0),
-    0
-  );
+  // 🔥 IMPORTANT: current_value mostly null hota hai → ignore karo
+  const currentValue = invested;
 
   const todayInterest = (credits || [])
     .filter((c) => c.credit_date === today)
@@ -103,13 +109,13 @@ const Dashboard = () => {
 
   const activeSips = new Set(
     txs
-      .filter((t) => (t.type || "").toLowerCase() === "sip")
+      .filter((t) => (t.type || "").toLowerCase().trim() === "sip")
       .map((t) => t.plan_name)
   ).size;
 
   setStats({
     invested,
-    currentValue: (currentValueFromTx || invested) + totalInterest,
+    currentValue: invested + totalInterest,
     activeSips,
     todayInterest,
     totalInterest,
