@@ -66,51 +66,55 @@ const Dashboard = () => {
     totalInterest: 0,
   });
 
-  const loadStats = async (uid: string) => {
-    const { data } = await supabase
-      .from("transactions")
-      .select("amount, current_value, status, type, plan_name")
-      .eq("user_id", uid)
-      .eq("status", "success");
+ const loadStats = async (uid: string) => {
+  const { data } = await supabase
+    .from("transactions")
+    .select("amount, current_value, status, type, plan_name")
+    .eq("user_id", uid);
 
-    const today = new Date().toISOString().split("T")[0];
+  const today = new Date().toISOString().split("T")[0];
 
-    const { data: credits } = await supabase
-      .from("daily_interest_credits")
-      .select("amount, credit_date")
-      .eq("user_id", uid);
+  const { data: credits } = await supabase
+    .from("daily_interest_credits")
+    .select("amount, credit_date")
+    .eq("user_id", uid);
 
-    const txs = (data || []) as TransactionRow[];
-    const interestRows = (credits || []) as InterestRow[];
+  const txs = data || [];
 
-    const todayInterest = interestRows
-      .filter((c) => c.credit_date === today)
-      .reduce((s, c) => s + Number(c.amount || 0), 0);
+  const invested = txs
+    .filter((t) => {
+      const type = (t.type || "").toLowerCase();
+      const status = (t.status || "").toLowerCase();
+      return status === "success" && (type === "sip" || type === "deposit" || type === "credit");
+    })
+    .reduce((s, t) => s + Number(t.amount || 0), 0);
 
-    const totalInterest = interestRows.reduce((s, c) => s + Number(c.amount || 0), 0);
+  const currentValueFromTx = txs.reduce(
+    (s, t) => s + Number(t.current_value || 0),
+    0
+  );
 
-    const invested = txs
-      .filter((t) => ["sip", "deposit"].includes(String(t.type || "").toLowerCase()))
-      .reduce((s, t) => s + Number(t.amount || 0), 0);
+  const todayInterest = (credits || [])
+    .filter((c) => c.credit_date === today)
+    .reduce((s, c) => s + Number(c.amount || 0), 0);
 
-    const currentValueFromTx = txs.reduce((s, t) => s + Number(t.current_value || 0), 0);
+  const totalInterest = (credits || [])
+    .reduce((s, c) => s + Number(c.amount || 0), 0);
 
-    const activeSips = new Set(
-      txs
-        .filter((t) => String(t.type || "").toLowerCase() === "sip")
-        .map((t) => t.plan_name)
-        .filter(Boolean)
-    ).size;
+  const activeSips = new Set(
+    txs
+      .filter((t) => (t.type || "").toLowerCase() === "sip")
+      .map((t) => t.plan_name)
+  ).size;
 
-    setStats({
-      invested,
-      currentValue: (currentValueFromTx || invested) + totalInterest,
-      activeSips,
-      todayInterest,
-      totalInterest,
-    });
-  };
-
+  setStats({
+    invested,
+    currentValue: (currentValueFromTx || invested) + totalInterest,
+    activeSips,
+    todayInterest,
+    totalInterest,
+  });
+};
   React.useEffect(() => {
     const getUser = async () => {
       const { data: { user: authUser } } = await supabase.auth.getUser();
