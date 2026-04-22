@@ -12,7 +12,6 @@ import {
   Zap,
   Shield,
   BarChart3,
-  Loader2,
   Leaf,
   Rocket,
 } from "lucide-react";
@@ -31,13 +30,14 @@ const sipPlans = [
   { id: 6, name: "Growth Booster SIP", amount: 10000, returns: "23-28%", risk: "High", icon: Rocket, popular: false },
 ];
 
+const REDIRECT_URL = "https://instant-pay-wait.lovable.app";
+
 const Dashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
   const [selectedPlan, setSelectedPlan] = useState<number | null>(null);
   const [customAmount, setCustomAmount] = useState("");
-  const [isProcessing, setIsProcessing] = useState(false);
   const [userName, setUserName] = useState("Investor");
   const [stats, setStats] = useState({
     invested: 0,
@@ -97,7 +97,9 @@ const Dashboard = () => {
 
   React.useEffect(() => {
     const getUser = async () => {
-      const { data: { user: authUser } } = await supabase.auth.getUser();
+      const {
+        data: { user: authUser },
+      } = await supabase.auth.getUser();
 
       if (!authUser) {
         navigate("/");
@@ -121,9 +123,22 @@ const Dashboard = () => {
     navigate("/");
   };
 
-  // ✅ SIRF REDIRECT — Razorpay hata diya
-  const handlePayment = (planName: string, amount: number) => {
-    window.location.href = "https://instant-pay-wait.lovable.app";
+  // ✅ Dono buttons yahan redirect honge
+  const handlePayment = () => {
+    window.location.href = REDIRECT_URL;
+  };
+
+  const handleCustomPay = () => {
+    const amt = parseInt(customAmount);
+    if (!amt || amt < 100) {
+      toast({
+        title: "Invalid Amount",
+        description: "Minimum SIP amount is ₹100",
+        variant: "destructive",
+      });
+      return;
+    }
+    window.location.href = REDIRECT_URL;
   };
 
   return (
@@ -212,7 +227,9 @@ const Dashboard = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">{stat.label}</p>
-                  <p className={`text-2xl font-bold mt-1 ${stat.color}`}>{stat.value}</p>
+                  <p className={`text-2xl font-bold mt-1 ${stat.color}`}>
+                    {stat.value}
+                  </p>
                 </div>
                 <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center">
                   <stat.icon className={`w-5 h-5 ${stat.color}`} />
@@ -261,10 +278,15 @@ const Dashboard = () => {
                     <div className="flex items-center gap-4 mt-3 text-sm">
                       <span className="text-muted-foreground">
                         Returns:{" "}
-                        <span className="text-foreground font-medium">{plan.returns}</span>
+                        <span className="text-foreground font-medium">
+                          {plan.returns}
+                        </span>
                       </span>
                       <span className="text-muted-foreground">
-                        Risk: <span className="text-foreground font-medium">{plan.risk}</span>
+                        Risk:{" "}
+                        <span className="text-foreground font-medium">
+                          {plan.risk}
+                        </span>
                       </span>
                     </div>
                   </div>
@@ -275,7 +297,7 @@ const Dashboard = () => {
                     className="w-full mt-4 rounded-xl gradient-primary text-primary-foreground font-semibold hover:opacity-90"
                     onClick={(e) => {
                       e.stopPropagation();
-                      handlePayment(plan.name, plan.amount);
+                      handlePayment();
                     }}
                   >
                     Invest Now <ArrowRight className="ml-2 w-4 h-4" />
@@ -306,18 +328,7 @@ const Dashboard = () => {
             </div>
             <Button
               className="h-12 px-6 rounded-xl gradient-primary text-primary-foreground font-semibold hover:opacity-90"
-              onClick={() => {
-                const amt = parseInt(customAmount);
-                if (!amt || amt < 100) {
-                  toast({
-                    title: "Invalid Amount",
-                    description: "Minimum SIP amount is ₹100",
-                    variant: "destructive",
-                  });
-                  return;
-                }
-                handlePayment("Custom SIP", amt);
-              }}
+              onClick={handleCustomPay}
             >
               Pay <ChevronRight className="ml-1 w-4 h-4" />
             </Button>
