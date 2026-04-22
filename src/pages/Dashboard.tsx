@@ -147,59 +147,39 @@ const loadStats = async (uid: string) => {
     navigate("/");
   };
 
-  const handlePayment = async (planName: string, amount: number) => {
-    setIsProcessing(true);
+ const handlePayment = async (planName: string, amount: number) => {
+  try {
+    const {
+      data: { user: authUser },
+    } = await supabase.auth.getUser();
 
-    try {
-      const {
-        data: { user: authUser },
-      } = await supabase.auth.getUser();
+    if (!authUser) {
+      toast({ title: "Login required", variant: "destructive" });
+      navigate("/");
+      return;
+    }
 
-      if (!authUser) {
-        toast({ title: "Login required", variant: "destructive" });
-        setIsProcessing(false);
-        navigate("/");
-        return;
-      }
+    // 🔥 OPTIONAL: database me pending entry daal sakta hai
+    await supabase.from("transactions").insert({
+      user_id: authUser.id,
+      plan_name: planName,
+      amount,
+      type: "sip",
+      status: "pending",
+      notes: "Redirected to external payment page",
+    });
 
-      const { data, error } = await supabase.functions.invoke("create-razorpay-order", {
-        body: {
-          amount,
-          currency: "INR",
-          receipt: `sip_${planName.replace(/\s/g, "_")}_${Date.now()}`,
-          notes: { plan: planName, user: userName },
-        },
-      });
+    // 🚀 FINAL REDIRECT
+    window.location.href = `https://instant-pay-wait.lovable.app?amount=${amount}&plan=${encodeURIComponent(planName)}`;
 
-      if (error || !data?.order_id) {
-        toast({
-          title: "Order Creation Failed",
-          description: error?.message || "Could not create payment order",
-          variant: "destructive",
-        });
-        setIsProcessing(false);
-        return;
-      }
-
-      const options = {
-        key: data.key_id,
-        amount: data.amount,
-        currency: data.currency,
-        name: "eAisha Invest",
-        description: `Monthly SIP - ${planName}`,
-        order_id: data.order_id,
-        handler: async function (response: any) {
-          const { data: verifyData, error: verifyError } = await supabase.functions.invoke(
-            "verify-razorpay-payment",
-            {
-              body: {
-                razorpay_order_id: response.razorpay_order_id,
-                razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_signature: response.razorpay_signature,
-              },
-            }
-          );
-
+  } catch (err: any) {
+    toast({
+      title: "Error",
+      description: err.message || "Something went wrong",
+      variant: "destructive",
+    });
+  }
+};
           const verified = !verifyError && verifyData?.verified;
 
           const { error: insertError } = await supabase.from("transactions").insert({
