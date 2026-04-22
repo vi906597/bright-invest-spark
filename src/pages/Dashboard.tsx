@@ -155,6 +155,7 @@ const { data: { user: authUser } } = await supabase.auth.getUser();
     status: "pending",
   });
 
+  // 🚀 REDIRECT ONLY
   window.location.href = `https://instant-pay-wait.lovable.app?amount=${amount}&plan=${encodeURIComponent(planName)}`;
 
 } catch (err: any) {
