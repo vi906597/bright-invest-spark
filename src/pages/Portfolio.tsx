@@ -73,34 +73,39 @@ const Portfolio = () => {
         }
       }
 
-      const result: Holding[] = Array.from(groups.entries()).map(([key, g]) => {
-        let cum = 0;
-        const monthlyData: number[] = [];
-        let invested = 0;
-        let currentValue = 0;
-        for (const t of g.txns) {
-          const a = Number(t.amount);
-          invested += a;
-          currentValue += Number(t.current_value || 0);
-          cum += a;
-          monthlyData.push(cum);
-        }
-        const cv = currentValue || invested;
-        const ret = invested > 0 ? ((cv - invested) / invested) * 100 : 0;
-        return {
-          key,
-          name: g.name,
-          monthlyAmount: g.monthlyAmount,
-          totalInvested: invested,
-          currentValue: cv,
-          months: g.txns.length,
-          returnPercent: Number(ret.toFixed(1)),
-          monthlyData,
-          isOther: g.isOther,
-          txns: g.txns as Txn[],
-        };
-      });
+     const result: Holding[] = Array.from(groups.entries()).map(([key, g]) => {
+  let cum = 0;
+  const monthlyData: number[] = [];
+  let invested = 0;
+  let currentValue = 0;
 
+  for (const t of g.txns) {
+    const a = Number(t.amount);
+    invested += a;
+
+    // ✅ FIXED
+    currentValue += a;
+
+    cum += a;
+    monthlyData.push(cum);
+  }
+
+  const cv = currentValue; // ✅ अब सही value
+  const ret = invested > 0 ? ((cv - invested) / invested) * 100 : 0;
+
+  return {
+    key,
+    name: g.name,
+    monthlyAmount: g.monthlyAmount,
+    totalInvested: invested,
+    currentValue: cv,
+    months: g.txns.length,
+    returnPercent: Number(ret.toFixed(1)),
+    monthlyData,
+    isOther: g.isOther,
+    txns: g.txns as Txn[],
+  };
+});
       // Sort: standard plans by amount asc, then "Other" at the end
       result.sort((a, b) => {
         if (a.isOther) return 1;
