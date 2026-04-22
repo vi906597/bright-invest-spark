@@ -84,8 +84,6 @@ const invested = txs
   })
   .reduce((s, t) => s + Number(t.amount || 0), 0);
 
-const currentValue = invested;
-
 const todayInterest = (credits || [])
   .filter((c) => c.credit_date === today)
   .reduce((s, c) => s + Number(c.amount || 0), 0);
@@ -137,7 +135,7 @@ await supabase.auth.signOut();
 navigate("/");
 };
 
-// 🔥 ONLY CHANGE: redirect
+// 🔥 FINAL REDIRECT FUNCTION
 const handlePayment = async (planName: string, amount: number) => {
 try {
 const { data: { user: authUser } } = await supabase.auth.getUser();
@@ -180,7 +178,51 @@ ZY<span className="text-blue-800">PEUS</span> </h1> </div>
     </div>
   </header>
 
-  {/* बाकी पूरा UI SAME है — कोई change नहीं */}
+  <main className="container mx-auto px-4 py-8 pb-24 max-w-5xl">
+    <h2 className="text-2xl font-bold mb-6">Select Plan</h2>
+
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      {sipPlans.map((plan) => (
+        <Card key={plan.id} className="p-6 cursor-pointer">
+          <h3 className="font-bold">{plan.name}</h3>
+          <p className="text-xl">₹{plan.amount}</p>
+
+          <Button
+            className="mt-4 w-full"
+            onClick={() => handlePayment(plan.name, plan.amount)}
+          >
+            Invest Now
+          </Button>
+        </Card>
+      ))}
+    </div>
+
+    <div className="mt-6">
+      <input
+        type="number"
+        placeholder="Custom amount"
+        value={customAmount}
+        onChange={(e) => setCustomAmount(e.target.value)}
+        className="border p-2 w-full"
+      />
+
+      <Button
+        className="mt-2 w-full"
+        onClick={() => {
+          const amt = parseInt(customAmount);
+          if (!amt || amt < 100) {
+            toast({ title: "Min ₹100 required" });
+            return;
+          }
+          handlePayment("Custom SIP", amt);
+        }}
+      >
+        Pay
+      </Button>
+    </div>
+  </main>
+
+  <BottomNav />
 </div>
 ```
 
