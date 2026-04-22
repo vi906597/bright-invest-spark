@@ -1,10 +1,20 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  Sparkles, TrendingUp, LogOut, IndianRupee, ArrowRight,
-  Calendar, ChevronRight, Star, Zap, Shield, BarChart3, Loader2,
+  Sparkles,
+  TrendingUp,
+  LogOut,
+  IndianRupee,
+  ArrowRight,
+  Calendar,
+  ChevronRight,
+  Star,
+  Zap,
+  Shield,
+  BarChart3,
+  Loader2,
   Leaf,
-  Rocket
+  Rocket,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -27,76 +37,98 @@ declare global {
   }
 }
 
+type TransactionRow = {
+  amount: number | string | null;
+  current_value: number | string | null;
+  status: string | null;
+  type: string | null;
+  plan_name: string | null;
+};
+
+type InterestRow = {
+  amount: number | string | null;
+  credit_date: string | null;
+};
+
 const Dashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+
   const [selectedPlan, setSelectedPlan] = useState<number | null>(null);
   const [customAmount, setCustomAmount] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const [userName, setUserName] = useState("Investor");
-  const [stats, setStats] = useState({ invested: 0, currentValue: 0, activeSips: 0, todayInterest: 0, totalInterest: 0 });
+  const [stats, setStats] = useState({
+    invested: 0,
+    currentValue: 0,
+    activeSips: 0,
+    todayInterest: 0,
+    totalInterest: 0,
+  });
 
   const loadStats = async (uid: string) => {
-  const { data } = await supabase
-    .from('transactions')
-    .select('amount, current_value, status, type, plan_name')
-    .eq('user_id', uid)
-    .eq('status', 'success');
+    const { data } = await supabase
+      .from("transactions")
+      .select("amount, current_value, status, type, plan_name")
+      .eq("user_id", uid)
+      .eq("status", "success");
 
-  const today = new Date().toISOString().split('T')[0];
+    const today = new Date().toISOString().split("T")[0];
 
-  const { data: credits } = await supabase
-    .from('daily_interest_credits')
-    .select('amount, credit_date')
-    .eq('user_id', uid);
+    const { data: credits } = await supabase
+      .from("daily_interest_credits")
+      .select("amount, credit_date")
+      .eq("user_id", uid);
 
-  const todayInterest = (credits || [])
-    .filter(c => c.credit_date === today)
-    .reduce((s, c) => s + Number(c.amount), 0);
+    const txs = (data || []) as TransactionRow[];
+    const interestRows = (credits || []) as InterestRow[];
 
-  const totalInterest = (credits || [])
-    .reduce((s, c) => s + Number(c.amount), 0);
+    const todayInterest = interestRows
+      .filter((c) => c.credit_date === today)
+      .reduce((s, c) => s + Number(c.amount || 0), 0);
 
-  if (data) {
-    // 🔥 FIXED: sip + deposit dono include
-    const invested = data
-      .filter(t => ['sip', 'deposit'].includes(t.type))
-      .reduce((s, t) => s + Number(t.amount), 0);
+    const totalInterest = interestRows.reduce((s, c) => s + Number(c.amount || 0), 0);
 
-    const currentValue = data.reduce(
-      (s, t) => s + Number(t.current_value || 0),
-      0
-    );
+    const invested = txs
+      .filter((t) => ["sip", "deposit"].includes(String(t.type || "").toLowerCase()))
+      .reduce((s, t) => s + Number(t.amount || 0), 0);
+
+    const currentValueFromTx = txs.reduce((s, t) => s + Number(t.current_value || 0), 0);
 
     const activeSips = new Set(
-      data.filter(t => t.type === 'sip').map(t => t.plan_name)
+      txs
+        .filter((t) => String(t.type || "").toLowerCase() === "sip")
+        .map((t) => t.plan_name)
+        .filter(Boolean)
     ).size;
 
     setStats({
       invested,
-      currentValue: (currentValue || invested) + totalInterest,
+      currentValue: (currentValueFromTx || invested) + totalInterest,
       activeSips,
       todayInterest,
-      totalInterest
+      totalInterest,
     });
-  } else {
-    setStats(s => ({
-      ...s,
-      todayInterest,
-      totalInterest
-    }));
-  }
-};
+  };
+
   React.useEffect(() => {
     const getUser = async () => {
       const { data: { user: authUser } } = await supabase.auth.getUser();
+
       if (!authUser) {
         navigate("/");
         return;
       }
-      setUserName(authUser.user_metadata?.full_name || authUser.email?.split("@")[0] || "Investor");
-      loadStats(authUser.id);
+
+      setUserName(
+        authUser.user_metadata?.full_name ||
+          authUser.email?.split("@")[0] ||
+          "Investor"
+      );
+
+      await loadStats(authUser.id);
     };
+
     getUser();
   }, [navigate]);
 
@@ -107,8 +139,12 @@ const Dashboard = () => {
 
   const handlePayment = async (planName: string, amount: number) => {
     setIsProcessing(true);
+
     try {
-      const { data: { user: authUser } } = await supabase.auth.getUser();
+      const {
+        data: { user: authUser },
+      } = await supabase.auth.getUser();
+
       if (!authUser) {
         toast({ title: "Login required", variant: "destructive" });
         setIsProcessing(false);
@@ -116,23 +152,25 @@ const Dashboard = () => {
         return;
       }
 
-      // Step 1: Create order via edge function
-      const { data, error } = await supabase.functions.invoke('create-razorpay-order', {
+      const { data, error } = await supabase.functions.invoke("create-razorpay-order", {
         body: {
           amount,
-          currency: 'INR',
-          receipt: `sip_${planName.replace(/\s/g, '_')}_${Date.now()}`,
+          currency: "INR",
+          receipt: `sip_${planName.replace(/\s/g, "_")}_${Date.now()}`,
           notes: { plan: planName, user: userName },
         },
       });
 
       if (error || !data?.order_id) {
-        toast({ title: "Order Creation Failed", description: error?.message || "Could not create payment order", variant: "destructive" });
+        toast({
+          title: "Order Creation Failed",
+          description: error?.message || "Could not create payment order",
+          variant: "destructive",
+        });
         setIsProcessing(false);
         return;
       }
 
-      // Step 2: Open Razorpay checkout
       const options = {
         key: data.key_id,
         amount: data.amount,
@@ -141,38 +179,54 @@ const Dashboard = () => {
         description: `Monthly SIP - ${planName}`,
         order_id: data.order_id,
         handler: async function (response: any) {
-          // Step 3: Verify payment via edge function
-          const { data: verifyData, error: verifyError } = await supabase.functions.invoke('verify-razorpay-payment', {
-            body: {
-              razorpay_order_id: response.razorpay_order_id,
-              razorpay_payment_id: response.razorpay_payment_id,
-              razorpay_signature: response.razorpay_signature,
-            },
-          });
+          const { data: verifyData, error: verifyError } = await supabase.functions.invoke(
+            "verify-razorpay-payment",
+            {
+              body: {
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+              },
+            }
+          );
 
           const verified = !verifyError && verifyData?.verified;
 
-          // Step 4: Save transaction to DB
-          await supabase.from('transactions').insert({
+          const { error: insertError } = await supabase.from("transactions").insert({
             user_id: authUser.id,
             plan_name: planName,
             amount,
-            type: 'sip',
-            status: verified ? 'success' : 'failed',
+            type: "sip",
+            status: verified ? "success" : "failed",
             razorpay_order_id: response.razorpay_order_id,
             razorpay_payment_id: response.razorpay_payment_id,
             razorpay_signature: response.razorpay_signature,
           });
 
+          if (insertError) {
+            toast({
+              title: "Database Error",
+              description: insertError.message,
+              variant: "destructive",
+            });
+            setIsProcessing(false);
+            return;
+          }
+
           if (!verified) {
-            toast({ title: "Payment Verification Failed", description: "Please contact support", variant: "destructive" });
+            toast({
+              title: "Payment Verification Failed",
+              description: "Please contact support",
+              variant: "destructive",
+            });
           } else {
             toast({
               title: "🎉 Payment Successful!",
               description: `SIP of ₹${amount}/month activated. Payment ID: ${response.razorpay_payment_id}`,
             });
-            loadStats(authUser.id);
+            await loadStats(authUser.id);
           }
+
           setSelectedPlan(null);
           setIsProcessing(false);
         },
@@ -180,15 +234,16 @@ const Dashboard = () => {
         theme: { color: "#7c3aed" },
         modal: {
           ondismiss: async () => {
-            await supabase.from('transactions').insert({
+            await supabase.from("transactions").insert({
               user_id: authUser.id,
               plan_name: planName,
               amount,
-              type: 'sip',
-              status: 'pending',
+              type: "sip",
+              status: "pending",
               razorpay_order_id: data.order_id,
-              notes: 'Payment cancelled by user',
+              notes: "Payment cancelled by user",
             });
+
             toast({ title: "Payment cancelled", variant: "destructive" });
             setIsProcessing(false);
           },
@@ -199,18 +254,25 @@ const Dashboard = () => {
         const rzp = new window.Razorpay(options);
         rzp.open();
       } else {
-        toast({ title: "Razorpay not loaded", description: "Please refresh the page and try again", variant: "destructive" });
+        toast({
+          title: "Razorpay not loaded",
+          description: "Please refresh the page and try again",
+          variant: "destructive",
+        });
         setIsProcessing(false);
       }
     } catch (err: any) {
-      toast({ title: "Error", description: err.message || "Something went wrong", variant: "destructive" });
+      toast({
+        title: "Error",
+        description: err.message || "Something went wrong",
+        variant: "destructive",
+      });
       setIsProcessing(false);
     }
   };
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
       <header className="sticky top-0 z-50 glass-card border-b border-border">
         <div className="container mx-auto flex items-center justify-between py-4 px-4">
           <div className="flex items-center gap-3">
@@ -218,25 +280,31 @@ const Dashboard = () => {
               <Sparkles className="w-5 h-5 text-primary-foreground" />
             </div>
             <h1 className="text-2xl font-bold">
-            ZY<span className="text-blue-800">PEUS</span>
-          </h1>
+              ZY<span className="text-blue-800">PEUS</span>
+            </h1>
           </div>
-          <Button variant="ghost" size="sm" onClick={handleLogout} className="rounded-xl text-destructive">
+
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleLogout}
+            className="rounded-xl text-destructive"
+          >
             <LogOut className="w-4 h-4" />
           </Button>
         </div>
       </header>
 
       <main className="container mx-auto px-4 py-8 pb-24 max-w-5xl">
-        {/* Welcome */}
         <div className="mb-8 animate-fade-in">
           <h1 className="text-3xl font-bold text-foreground">
             Hello, <span className="text-primary">{userName}</span> 👋
           </h1>
-          <p className="text-muted-foreground mt-1">Start your wealth creation journey with monthly SIP</p>
+          <p className="text-muted-foreground mt-1">
+            Start your wealth creation journey with monthly SIP
+          </p>
         </div>
 
-        {/* Today's Interest Banner */}
         {stats.todayInterest > 0 && (
           <Card className="p-4 mb-4 rounded-2xl border-2 border-green-500/30 bg-green-500/5 animate-fade-in">
             <div className="flex items-center justify-between">
@@ -246,25 +314,46 @@ const Dashboard = () => {
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground">Today interest amount 🎉</p>
-                  <p className="text-xl font-bold text-green-500">+₹{stats.todayInterest.toLocaleString()}</p>
+                  <p className="text-xl font-bold text-green-500">
+                    +₹{stats.todayInterest.toLocaleString()}
+                  </p>
                 </div>
               </div>
               <div className="text-right">
                 <p className="text-xs text-muted-foreground">Total interest</p>
-                <p className="text-sm font-semibold text-green-500">₹{stats.totalInterest.toLocaleString()}</p>
+                <p className="text-sm font-semibold text-green-500">
+                  ₹{stats.totalInterest.toLocaleString()}
+                </p>
               </div>
             </div>
           </Card>
         )}
 
-        {/* Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
           {[
-            { label: "Total Invested", value: `₹${stats.invested.toLocaleString()}`, icon: IndianRupee, color: "text-primary" },
-            { label: "Current Value", value: `₹${stats.currentValue.toLocaleString()}`, icon: TrendingUp, color: "text-green-500" },
-            { label: "Active SIPs", value: String(stats.activeSips), icon: Calendar, color: "text-accent" },
+            {
+              label: "Total Invested",
+              value: `₹${stats.invested.toLocaleString()}`,
+              icon: IndianRupee,
+              color: "text-primary",
+            },
+            {
+              label: "Current Value",
+              value: `₹${stats.currentValue.toLocaleString()}`,
+              icon: TrendingUp,
+              color: "text-green-500",
+            },
+            {
+              label: "Active SIPs",
+              value: String(stats.activeSips),
+              icon: Calendar,
+              color: "text-accent",
+            },
           ].map((stat) => (
-            <Card key={stat.label} className="p-5 rounded-2xl shadow-card border-border hover:shadow-elevated transition-shadow">
+            <Card
+              key={stat.label}
+              className="p-5 rounded-2xl shadow-card border-border hover:shadow-elevated transition-shadow"
+            >
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">{stat.label}</p>
@@ -278,7 +367,6 @@ const Dashboard = () => {
           ))}
         </div>
 
-        {/* SIP Plans */}
         <div className="mb-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
@@ -291,7 +379,9 @@ const Dashboard = () => {
               <Card
                 key={plan.id}
                 className={`relative p-6 rounded-2xl cursor-pointer transition-all border-2 hover:shadow-elevated ${
-                  selectedPlan === plan.id ? "border-primary shadow-elevated" : "border-transparent shadow-card"
+                  selectedPlan === plan.id
+                    ? "border-primary shadow-elevated"
+                    : "border-transparent shadow-card"
                 }`}
                 onClick={() => setSelectedPlan(plan.id)}
               >
@@ -300,6 +390,7 @@ const Dashboard = () => {
                     Popular
                   </span>
                 )}
+
                 <div className="flex items-start gap-4">
                   <div className="w-12 h-12 rounded-xl bg-secondary flex items-center justify-center shrink-0">
                     <plan.icon className="w-6 h-6 text-primary" />
@@ -307,12 +398,19 @@ const Dashboard = () => {
                   <div className="flex-1">
                     <h3 className="font-bold text-foreground">{plan.name}</h3>
                     <div className="flex items-baseline gap-1 mt-1">
-                      <span className="text-2xl font-bold text-primary">₹{plan.amount.toLocaleString()}</span>
+                      <span className="text-2xl font-bold text-primary">
+                        ₹{plan.amount.toLocaleString()}
+                      </span>
                       <span className="text-sm text-muted-foreground">/month</span>
                     </div>
                     <div className="flex items-center gap-4 mt-3 text-sm">
-                      <span className="text-muted-foreground">Returns: <span className="text-foreground font-medium">{plan.returns}</span></span>
-                      <span className="text-muted-foreground">Risk: <span className="text-foreground font-medium">{plan.risk}</span></span>
+                      <span className="text-muted-foreground">
+                        Returns:{" "}
+                        <span className="text-foreground font-medium">{plan.returns}</span>
+                      </span>
+                      <span className="text-muted-foreground">
+                        Risk: <span className="text-foreground font-medium">{plan.risk}</span>
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -326,7 +424,15 @@ const Dashboard = () => {
                       handlePayment(plan.name, plan.amount);
                     }}
                   >
-                    {isProcessing ? <><Loader2 className="ml-2 w-4 h-4 animate-spin" /> Processing...</> : <>Invest Now <ArrowRight className="ml-2 w-4 h-4" /></>}
+                    {isProcessing ? (
+                      <>
+                        <Loader2 className="ml-2 w-4 h-4 animate-spin" /> Processing...
+                      </>
+                    ) : (
+                      <>
+                        Invest Now <ArrowRight className="ml-2 w-4 h-4" />
+                      </>
+                    )}
                   </Button>
                 )}
               </Card>
@@ -334,14 +440,15 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Custom SIP */}
         <Card className="p-6 rounded-2xl shadow-card border-border">
           <h3 className="font-bold text-foreground mb-3 flex items-center gap-2">
             <IndianRupee className="w-5 h-5 text-primary" /> Custom SIP Amount
           </h3>
           <div className="flex gap-3">
             <div className="relative flex-1">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-semibold">₹</span>
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-semibold">
+                ₹
+              </span>
               <input
                 type="number"
                 placeholder="Enter amount (min ₹100)"
@@ -357,17 +464,28 @@ const Dashboard = () => {
               onClick={() => {
                 const amt = parseInt(customAmount);
                 if (!amt || amt < 100) {
-                  toast({ title: "Invalid Amount", description: "Minimum SIP amount is ₹100", variant: "destructive" });
+                  toast({
+                    title: "Invalid Amount",
+                    description: "Minimum SIP amount is ₹100",
+                    variant: "destructive",
+                  });
                   return;
                 }
                 handlePayment("Custom SIP", amt);
               }}
             >
-              {isProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : <>Pay <ChevronRight className="ml-1 w-4 h-4" /></>}
+              {isProcessing ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <>
+                  Pay <ChevronRight className="ml-1 w-4 h-4" />
+                </>
+              )}
             </Button>
           </div>
         </Card>
       </main>
+
       <BottomNav />
     </div>
   );
